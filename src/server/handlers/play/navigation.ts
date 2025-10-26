@@ -5,7 +5,6 @@ import { SledRace } from '../games/sled';
 import { CardJitsu } from '../games/card';
 import { Handle } from '../handles';
 import { CardJitsuFire } from '../games/fire';
-import { Mancala } from '../games/mancala';
 
 const handler = new Handler();
 
@@ -134,8 +133,7 @@ handler.boot(s => {
   s.waddleConstructors = {
     'card': CardJitsu,
     'sled': SledRace,
-    'fire': CardJitsuFire,
-    'mancala': Mancala
+    'fire': CardJitsuFire
   };
 });
 

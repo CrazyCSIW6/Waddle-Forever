@@ -158,7 +158,7 @@ handler.xt(Handle.LeaveWaddle, (client) => {
 
 handler.disconnect((client) => {
   client.disconnect();
-  client.update();
+  // Note: client.disconnect() now handles update() internally with proper tracking checks
 })
 
 export default handler;

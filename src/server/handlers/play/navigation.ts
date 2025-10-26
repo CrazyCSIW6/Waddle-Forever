@@ -32,7 +32,7 @@ handler.xt(Handle.LeaveGame, (client, score) => {
   client.penguin.addCoins(coins);
   
   client.sendXt('zo', String(client.penguin.coins), ...stampInfo);
-  client.update();
+  void client.update();
 });
 
 handler.xt(Handle.JoinIgloo, (client, fakeId) => {

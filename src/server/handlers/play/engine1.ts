@@ -40,14 +40,6 @@ handler.xt(Handle.AddItemOld, (client, item) => {
 
 // updating penguin
 handler.xt(Handle.UpdatePenguinOld, (client, color, head, face, neck, body, hand, feet, pin, background) => {
-  // Ensure all equipped items are in inventory
-  const items = [color, head, face, neck, body, hand, feet, pin, background];
-  items.forEach(item => {
-    if (item > 0 && !client.penguin.hasItem(item)) {
-      client.penguin.addItem(item);
-    }
-  });
-  
   client.penguin.color = color
   client.penguin.head = head;
   client.penguin.face = face;
@@ -135,7 +127,6 @@ handler.post('/php/login.php', (body) => {
 
 handler.disconnect((client) => {
   client.disconnect();
-  client.update();
 });
 
 export default handler;

@@ -386,6 +386,16 @@ export class Server {
     this._playersById.set(id, client);
   }
 
+  /** Get the currently tracked client for a penguin ID */
+  getTrackedPlayer(id: number): Client | undefined {
+    return this._playersById.get(id);
+  }
+
+  /** Remove a tracked player */
+  untrackPlayer(id: number): void {
+    this._playersById.delete(id);
+  }
+
   /** Make an igloo open */
   openIgloo(id: number, igloo: Igloo): void {
     this._igloos.set(id, igloo);
@@ -689,8 +699,7 @@ export class Client {
 
   leaveRoom(): void {
     const players = this.room.players.filter((p) => p.penguin.id !== this.penguin.id);
-    // Only send room exit message to other players, not to the disconnecting player
-    players.forEach((player) => player.sendXt('rp', this.penguin.id));
+    this.sendRoomXt('rp', this.penguin.id, ...players.map((p) => p.penguinString));
     this.room.removePlayer(this);
   }
 
@@ -723,7 +732,7 @@ export class Client {
   }
 
   update (): void {
-    if (!this.isBot && this._penguin !== undefined) {
+    if (!this.isBot) {
       db.update<PenguinData>(Databases.Penguins, this.penguin.id, this.penguin.serialize());
     }
   }
@@ -1141,7 +1150,13 @@ export class Client {
     const minutesDelta = delta / 1000 / 60;
     this._penguin?.incrementPlayTime(minutesDelta);
     if (this._penguin !== undefined) {
-      this.update();
+      // Only save if this client is still the active one for this penguin
+      // This prevents overwriting data when a player reconnects quickly
+      const trackedClient = this._server.getTrackedPlayer(this._penguin.id);
+      if (trackedClient === this) {
+        this.update();
+        this._server.untrackPlayer(this._penguin.id);
+      }
     }
     this._socket?.end();
   }
@@ -1277,10 +1292,6 @@ export class Client {
   }
 
   updateEquipment(slot: PenguinEquipmentSlot, id: number): void {
-    // Ensure equipped items are in inventory
-    if (id > 0 && !this.penguin.hasItem(id)) {
-      this.penguin.addItem(id);
-    }
     this.penguin[slot] = id;
     this.sendRoomXt(`up${EQUIP_SLOT_MAPPINGS[slot]}`, this.penguin.id, id);
 

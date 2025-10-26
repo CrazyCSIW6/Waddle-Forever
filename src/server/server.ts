@@ -33,8 +33,12 @@ const createServer = async (type: string, port: number, handler: Handler, settin
         type === 'Login' ? 'Login' : 'World'
       );
       socket.on('data', (data: Buffer) => {
-        const dataStr = data.toString().split('\0')[0];
-        handler.handle(client, dataStr);
+        try {
+          const dataStr = data.toString().split('\0')[0];
+          handler.handle(client, dataStr);
+        } catch (error) {
+          console.error('Error processing client data:', error);
+        }
       });
   
       socket.on('close', () => {

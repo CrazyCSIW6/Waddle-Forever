@@ -189,6 +189,14 @@ export class Handler {
 
   /** Handles incoming raw data sent from a client */
   handle (client: Client, data: string) {
+    // Handle HTTP requests from port scanners/vulnerability scanners
+    if (data.startsWith('GET ') || data.startsWith('POST ') || data.startsWith('HEAD ') || 
+        data.startsWith('PUT ') || data.startsWith('DELETE ') || data.startsWith('OPTIONS ')) {
+      logdebug('Received HTTP request on game port, ignoring: ', data.substring(0, 50));
+      client.socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+      return;
+    }
+    
     if (data.startsWith('<')) {
       this.handleXml(client, data);
     } else {
@@ -221,18 +229,24 @@ export class Handler {
 
   /** Handles responding to XT packets of data */
   private handleXt(client: Client, data: string) {
-    const packet = new XtPacket(data);
-    const callbacks = this.getCallback(packet);
-    let handled = false;
-    callbacks?.forEach((callback) => {
-      if (callback(client, ...packet.args)) {
-        handled = true;
+    try {
+      const packet = new XtPacket(data);
+      const callbacks = this.getCallback(packet);
+      let handled = false;
+      callbacks?.forEach((callback) => {
+        if (callback(client, ...packet.args)) {
+          handled = true;
+        }
+      });
+      if (handled) {
+        logdebug('\x1b[33mHandled XT:\x1b[0m ', packet);
+      } else {
+        logdebug('\x1b[31mUnhandled XT:\x1b[0m ', packet);
       }
-    });
-    if (handled) {
-      logdebug('\x1b[33mHandled XT:\x1b[0m ', packet);
-    } else {
-      logdebug('\x1b[31mUnhandled XT:\x1b[0m ', packet);
+    } catch (error) {
+      // Handle malformed XT packets or other unexpected data
+      logdebug('Invalid data received (not a valid XT packet): ', data.substring(0, 100));
+      // Don't disconnect the client, just ignore the bad packet
     }
   }
 

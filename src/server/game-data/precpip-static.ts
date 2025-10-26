@@ -45,6 +45,7 @@ export const PRE_CPIP_STATIC_FILES: Record<string, string> = {
   'games/astro.swf': 'mammoth:games/astro.swf',
   'games/beans.swf': 'mammoth:games/beans.swf',
   'games/biscuit.swf': 'mammoth:games/biscuit.swf',
+  'games/mancala.swf': 'mammoth:games/mancala.swf',
   'games/puffle.swf': 'mammoth:games/puffle.swf',
   'load.swf': 'mammoth:load.swf',
   'artwork/news/newfan.swf': 'archives:NewsFan.swf',

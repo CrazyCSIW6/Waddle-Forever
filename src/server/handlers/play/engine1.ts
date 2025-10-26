@@ -99,13 +99,32 @@ handler.xt(Handle.GetInventory2007, (client) => {
 
 handler.xt(Handle.SetFrameOld, (client, frame) => {
   client.setFrame(frame);
-})
+});
+
+// Send teleport (positioning at table) for Engine 1
+// Note: Registered manually because 's#st' conflicts with top-level 'st' stamp handler
+const stCallbacks = handler.listeners.get('s%st') || [];
+handler.listeners.set('s%st', [...stCallbacks, (client: Client, x: string, y: string, frame: string) => {
+  const xNum = parseInt(x);
+  const yNum = parseInt(y);
+  const frameNum = parseInt(frame);
+  
+  if (!isNaN(xNum) && !isNaN(yNum) && !isNaN(frameNum)) {
+    // Update client position and frame
+    client.setPosition(xNum, yNum);
+    client.setFrame(frameNum);
+    
+    // Broadcast to other players
+    client.sendRoomXt('st', client.penguin.id, xNum, yNum, frameNum);
+  }
+  
+  return true;
+}]);
 
 // Logging in
 handler.post('/php/login.php', (body) => {
   const { Username } = body;
   const penguin = Client.getPenguinFromName(Username);
-
   const params: Record<string, number | string> = {
     crumb: Client.engine1Crumb(penguin),
     k1: 'a',

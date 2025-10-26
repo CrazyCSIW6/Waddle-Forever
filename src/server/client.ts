@@ -245,19 +245,27 @@ type PlayerRoomInfo = {
   frame: number;
 };
 
-/** Represents a room of a server */
-class GameRoom {
-  private _players: Map<Client, PlayerRoomInfo>;
+/** Manages a game room (players currently in a penguin room) */
+export class GameRoom {
   private _id: number;
-  private _bots: BotGroup;
-  /** Waddle rooms hosted inside this room */
-  private _waddles: Map<number, WaddleRoom>;
 
-  constructor(id: number, server: Server) {
+  private _players: Map<Client, PlayerRoomInfo>
+
+  private _waddles: Map<number, WaddleRoom>
+
+  private _tables: Map<number, any> = new Map();
+
+  private _bots: BotGroup;
+
+  private _server: Server;
+
+  constructor(roomId: number, server: Server) {
+    this._id = roomId;
     this._players = new Map<Client, PlayerRoomInfo>();
-    this._id = id;
+    this._server = server;
     this._bots = new BotGroup(server);
     this._waddles = new Map<number, WaddleRoom>();
+    this._tables = new Map();
   }
 
   /** Get info of player */
@@ -306,6 +314,26 @@ class GameRoom {
 
   getWaddleRooms() {
     return Array.from(this._waddles.values());
+  }
+
+  get tables() {
+    return this._tables;
+  }
+
+  getTable(id: number) {
+    return this._tables.get(id);
+  }
+
+  getTables() {
+    return Array.from(this._tables.values());
+  }
+
+  addTable(table: any) {
+    this._tables.set(table.id, table);
+  }
+
+  sendXt(code: string, ...args: Array<number | string>) {
+    this.players.forEach(player => player.sendXt(code, ...args));
   }
 }
 
@@ -474,10 +502,16 @@ export class Client {
   protected _penguin: Penguin | undefined;
 
   /** Instance of waddle game, if playing, or null otherwise */
-  private _waddleGame: WaddleGame | null;
+  private _waddleGame: WaddleGame | null = null;
 
-  /** Current Waddle Room, if it exists */
+  /** Currently hosting CPMail status */
+  private _mail: boolean = false;
+
+  /** Currently in a waddle room */
   private _currentWaddleRoom: WaddleRoom | undefined;
+
+  /** Currently at a table */
+  private _table: any = null;
 
   /** Reference to the room the player is in */
   private _currentRoom: GameRoom | undefined;
@@ -867,6 +901,14 @@ export class Client {
 
   setWaddleGame(waddleGame: WaddleGame): void {
     this._waddleGame = waddleGame;
+  }
+
+  get table() {
+    return this._table;
+  }
+
+  set table(table: any) {
+    this._table = table;
   }
 
   sendStamps (): void {

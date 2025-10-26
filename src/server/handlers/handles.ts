@@ -138,6 +138,7 @@ export enum Handle {
   SledRaceAction,
   LeaveWaddleGame,
   PuckMove,
+  GetPuckPosition,
   HandleSendMessage,
   SendJokeOld,
   SendSafeMessageOld,
@@ -277,6 +278,7 @@ export const HANDLE_ARGUMENTS = {
   [Handle.SledRaceAction]: ['string', 'string', 'string', 'string'],
   [Handle.LeaveWaddleGame]: [],
   [Handle.PuckMove]: ['number', 'number'],
+  [Handle.GetPuckPosition]: [],
   [Handle.HandleSendMessage]: ['string', 'string'],
   [Handle.SendJokeOld]: ['string'],
   [Handle.SendSafeMessageOld]: ['string'],
@@ -452,7 +454,10 @@ const HANDLER_MAPPING: HandlerMapping = {
     'zr': Handle.RollSpyDrills,
     'zc': Handle.SpyDrillsReward,
     'lw': Handle.LeaveWaddle,
-    'gz': Handle.EnterWaddleGame,
+    'gz': [
+      Handle.GetPuckPosition,
+      Handle.EnterWaddleGame
+    ],
     'uz': Handle.UpdateWaddleGameSeats,
     'zm': [
       Handle.PuckMove,

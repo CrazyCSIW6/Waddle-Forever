@@ -722,7 +722,7 @@ export class Client {
   }
 
   update (): void {
-    if (!this.isBot) {
+    if (!this.isBot && this._penguin !== undefined) {
       db.update<PenguinData>(Databases.Penguins, this.penguin.id, this.penguin.serialize());
     }
   }

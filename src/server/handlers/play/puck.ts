@@ -9,8 +9,8 @@ type PuckState = {
   y: number;
 };
 
-// Default puck position at center of rink bounds (xMin:-200 to xMax:240, yMin:-90 to yMax:140)
-const DEFAULT_PUCK_STATE: PuckState = { x: 20, y: 25 };
+// Default puck position at center of rink bounds
+const DEFAULT_PUCK_STATE: PuckState = { x: 360, y: 240 };
 
 let puckState: PuckState = { ...DEFAULT_PUCK_STATE };
 

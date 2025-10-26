@@ -689,7 +689,8 @@ export class Client {
 
   leaveRoom(): void {
     const players = this.room.players.filter((p) => p.penguin.id !== this.penguin.id);
-    this.sendRoomXt('rp', this.penguin.id, ...players.map((p) => p.penguinString));
+    // Only send room exit message to other players, not to the disconnecting player
+    players.forEach((player) => player.sendXt('rp', this.penguin.id));
     this.room.removePlayer(this);
   }
 
@@ -1276,6 +1277,10 @@ export class Client {
   }
 
   updateEquipment(slot: PenguinEquipmentSlot, id: number): void {
+    // Ensure equipped items are in inventory
+    if (id > 0 && !this.penguin.hasItem(id)) {
+      this.penguin.addItem(id);
+    }
     this.penguin[slot] = id;
     this.sendRoomXt(`up${EQUIP_SLOT_MAPPINGS[slot]}`, this.penguin.id, id);
 

@@ -6,6 +6,7 @@ import { RoomChanges } from "./parties";
 type StageName = 'Space Adventure' |
   'The Twelfth Fish' |
   'Team Blue\'s Rally Debut' |
+  'Team Blue\'s Rally 2' |
   'Quest for the Golden Puffle' |
   'Squidzoid vs. Shadow Guy and Gamma Gal' |
   'The Penguins that Time Forgot' |
@@ -36,6 +37,10 @@ export const STAGE_PLAYS: Array<{
   {
     name: 'Team Blue\'s Rally Debut',
     musicId: 33
+  },
+  {
+    name: 'Team Blue\'s Rally 2',
+    musicId: 36
   },
   {
     name: 'Quest for the Golden Puffle',
@@ -147,6 +152,14 @@ export const STAGE_TIMELINE: Array<{
     stageFileRef: 'archives:RoomsStage-June2008.swf',
     costumeTrunkFileRef: 'archives:June08Costume.swf'
   },
+  {
+    date: '2008-08-08',
+    name: 'Team Blue\'s Rally 2',
+    // placeholder file using team blue vs team red, which is nearly identical
+    stageFileRef: 'archives:Stage2011Aug17.swf',
+    plazaFileRef: 'recreation:plaza_team_blues_rally_2.swf',
+    costumeTrunkFileRef: 'archives:August2008Costume.swf'
+  },
   // squidzoid july is also completely lost
   // team blue rally 2 is completely lost
   // post CPIP could be reconstructed
@@ -188,7 +201,7 @@ export const STAGE_TIMELINE: Array<{
   {
     date: '2009-01-09',
     name: 'Squidzoid vs. Shadow Guy and Gamma Gal',
-    stageFileRef: 'archives:RoomsStage-October2009.swf', // from october 2009
+    stageFileRef: 'archives:StageSquidzoidJan09.swf',
     // I think this plaza is accurate (with sign)
     plazaFileRef: 'recreation:plaza_squidzoid_sign.swf',
     costumeTrunkFileRef: 'archives:January2009Costume.swf',

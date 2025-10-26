@@ -137,6 +137,7 @@ export enum Handle {
   JoinSled,
   SledRaceAction,
   LeaveWaddleGame,
+  PuckMove,
   HandleSendMessage,
   SendJokeOld,
   SendSafeMessageOld,
@@ -275,6 +276,7 @@ export const HANDLE_ARGUMENTS = {
   [Handle.JoinSled]: [],
   [Handle.SledRaceAction]: ['string', 'string', 'string', 'string'],
   [Handle.LeaveWaddleGame]: [],
+  [Handle.PuckMove]: ['number', 'number'],
   [Handle.HandleSendMessage]: ['string', 'string'],
   [Handle.SendJokeOld]: ['string'],
   [Handle.SendSafeMessageOld]: ['string'],
@@ -453,6 +455,7 @@ const HANDLER_MAPPING: HandlerMapping = {
     'gz': Handle.EnterWaddleGame,
     'uz': Handle.UpdateWaddleGameSeats,
     'zm': [
+      Handle.PuckMove,
       Handle.SledRaceAction,
       Handle.CardJitsuDeal,
       Handle.CardJitsuPick,

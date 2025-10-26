@@ -14,10 +14,10 @@ import { getModRouter } from './settings';
 import { setApiServer } from './settings-api';
 import { HTTP_PORT } from '../common/constants';
 
-const createServer = async (type: string, port: number, handler: Handler, settingsManager: SettingsManager, server: Express): Promise<Server> => {
+const createServer = async (type: string, port: number, handler: Handler, settingsManager: SettingsManager, server: Express, useEngine1Waddles: boolean = false): Promise<Server> => {
   handler.useEndpoints(server);
 
-  const gameServer = new Server(settingsManager);
+  const gameServer = new Server(settingsManager, useEngine1Waddles);
 
   handler.bootServer(gameServer);
 
@@ -77,7 +77,7 @@ const startServer = async (settingsManager: SettingsManager): Promise<void> => {
   // TODO in the future, "world" and "old" should be merged somewhat
   await createServer('Login', 6112, loginHandler, settingsManager, server);
   const world = await createServer('World', WORLD_PORT, worldHandler, settingsManager, server);
-  const oldWorld = await createServer('Old', 6114, oldHandler, settingsManager, server);
+  const oldWorld = await createServer('Old', 6114, oldHandler, settingsManager, server, true);
   
   setApiServer(settingsManager, server, [world, oldWorld]);
 

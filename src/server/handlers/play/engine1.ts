@@ -101,6 +101,41 @@ handler.xt(Handle.SetFrameOld, (client, frame) => {
   client.setFrame(frame);
 })
 
+// Get table/waddle information for Engine 1
+handler.xt(Handle.GetWaddleOld, (client, ...waddles) => {
+  const waddleRooms = client.room.getWaddleRooms();
+  client.sendXt('gt', ...waddleRooms.map((w) => {
+    return `${w.id}|${w.players.filter(p => p !== undefined).length}`;
+  }));
+});
+
+// Join table/waddle for Engine 1
+handler.xt(Handle.JoinWaddleOld, (client, tableId) => {
+  const waddleRoom = client.room.getWaddleRoom(tableId);
+  
+  // Find an empty seat
+  let seatId = -1;
+  const seats = waddleRoom.seats;
+  for (let i = 0; i < seats.length; i++) {
+    if (seats[i] === null) {
+      seatId = i;
+      break;
+    }
+  }
+  
+  if (seatId !== -1) {
+    // Send back the table and seat assignment
+    client.sendXt('jt', tableId, seatId);
+    
+    // Actually join the waddle room
+    client.joinWaddleRoom(waddleRoom);
+    
+    // Notify all players in the room about the updated table
+    const playerCount = waddleRoom.players.length;
+    client.sendRoomXt('ut', tableId, playerCount);
+  }
+});
+
 // Logging in
 handler.post('/php/login.php', (body) => {
   const { Username } = body;

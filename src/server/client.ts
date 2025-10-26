@@ -14,7 +14,7 @@ import { getVersionsTimeline } from './routes/version.txt';
 import { Update } from './game-data/updates';
 import { findInVersion } from './game-data';
 import { OLD_CLIENT_ITEMS } from './game-logic/client-items';
-import { WaddleName, WADDLE_ROOMS } from './game-logic/waddles';
+import { WaddleName, WADDLE_ROOMS, ENGINE1_WADDLE_ROOMS } from './game-logic/waddles';
 import { Vector } from '../common/utils';
 import { logverbose } from './logger';
 import { CardJitsuProgress } from './game-logic/ninja-progress';
@@ -334,17 +334,18 @@ export class Server {
 
   private _waddleConstructors: WaddleConstructors | undefined;
 
-  constructor(settings: SettingsManager) {
+  constructor(settings: SettingsManager, useEngine1Waddles: boolean = false) {
     this._settingsManager = settings;
     this._rooms = new Map<number, GameRoom>();
     this._igloos = new Map<number, Igloo>();
     this._playersById = new Map<number, Client>();
     this._followers = new Map<Client, Bot[]>();
-    this.init();
+    this.init(useEngine1Waddles);
   }
 
-  private init() {
-    WADDLE_ROOMS.forEach((waddle) => {
+  private init(useEngine1Waddles: boolean) {
+    const waddleRooms = useEngine1Waddles ? ENGINE1_WADDLE_ROOMS : WADDLE_ROOMS;
+    waddleRooms.forEach((waddle) => {
       const room = this.getRoom(waddle.roomId);
       room.waddles.set(waddle.waddleId, new WaddleRoom(waddle.waddleId, waddle.seats, waddle.game));
     });
@@ -369,7 +370,7 @@ export class Server {
     this._igloos = new Map<number, Igloo>();
     this._playersById = new Map<number, Client>();
     this._followers = new Map<Client, Bot[]>();
-    this.init();
+    this.init(false);
   }
 
   setCardMatchmaker(matchMaker: MatchMaker) {

@@ -1,5 +1,5 @@
 /** Identifies the type of game */
-export type WaddleName = 'sled' | 'card' | 'fire';
+export type WaddleName = 'sled' | 'card' | 'fire' | 'mancala';
 
 type WaddleRoomInfo = {
   waddleId: number;
@@ -8,6 +8,49 @@ type WaddleRoomInfo = {
   game: WaddleName;
 }
 
+/** Engine 1 waddle rooms (uses different IDs for tables) */
+export const ENGINE1_WADDLE_ROOMS: WaddleRoomInfo[] = [
+  // Mancala tables in Book Room (111)
+  {
+    waddleId: 100,
+    roomId: 111,
+    seats: 2,
+    game: 'mancala'
+  },
+  {
+    waddleId: 101,
+    roomId: 111,
+    seats: 2,
+    game: 'mancala'
+  },
+  {
+    waddleId: 102,
+    roomId: 111,
+    seats: 2,
+    game: 'mancala'
+  },
+  {
+    waddleId: 103,
+    roomId: 111,
+    seats: 2,
+    game: 'mancala'
+  },
+  {
+    waddleId: 104,
+    roomId: 111,
+    seats: 2,
+    game: 'mancala'
+  },
+  // Mancala table in PSA HQ (803)
+  {
+    waddleId: 105,
+    roomId: 803,
+    seats: 2,
+    game: 'mancala'
+  }
+];
+
+/** Modern client waddle rooms */
 export const WADDLE_ROOMS: WaddleRoomInfo[] = [
   {
     waddleId: 100,
@@ -104,5 +147,29 @@ export const WADDLE_ROOMS: WaddleRoomInfo[] = [
     roomId: 812,
     seats: 4,
     game: 'fire'
+  },
+  {
+    waddleId: 400,
+    roomId: 111,
+    seats: 2,
+    game: 'mancala'
+  },
+  {
+    waddleId: 401,
+    roomId: 111,
+    seats: 2,
+    game: 'mancala'
+  },
+  {
+    waddleId: 402,
+    roomId: 111,
+    seats: 2,
+    game: 'mancala'
+  },
+  {
+    waddleId: 403,
+    roomId: 111,
+    seats: 2,
+    game: 'mancala'
   }
 ];

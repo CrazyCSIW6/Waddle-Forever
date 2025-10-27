@@ -156,7 +156,15 @@ export enum Handle {
   CardJitsuFireChooseElement,
   EPFStamps,
   OpenBook,
-  CloseBook
+  CloseBook,
+  JoinPlayerRoomOld,
+  GetOpenIgloosOld,
+  OpenIglooOld,
+  CloseIglooOld,
+  GetFurnitureOld,
+  AddFurnitureOld,
+  AddIglooUpgradeOld,
+  UpdateRoomOld
 };
 
 /** Map of all the handles and their valid arguments */
@@ -296,7 +304,15 @@ export const HANDLE_ARGUMENTS = {
   [Handle.CardJitsuFireChooseElement]: ['string', 'string'],
   [Handle.EPFStamps]: ['number'],
   [Handle.OpenBook]: ['number'],
-  [Handle.CloseBook]: []
+  [Handle.CloseBook]: [],
+  [Handle.JoinPlayerRoomOld]: ['number'],
+  [Handle.GetOpenIgloosOld]: [],
+  [Handle.OpenIglooOld]: ['number', 'string'],
+  [Handle.CloseIglooOld]: ['number'],
+  [Handle.GetFurnitureOld]: [],
+  [Handle.AddFurnitureOld]: ['number'],
+  [Handle.AddIglooUpgradeOld]: ['number'],
+  [Handle.UpdateRoomOld]: 'string'
 } as const;
 
 const HANDLER_MAPPING: HandlerMapping = {
@@ -307,6 +323,12 @@ const HANDLER_MAPPING: HandlerMapping = {
     'ai': Handle.AddItemOld,
     'up': Handle.UpdatePenguinOld,
     'il': Handle.GetInventoryOld,
+    'jp': Handle.JoinPlayerRoomOld,
+    'gr': Handle.GetOpenIgloosOld,
+    'gf': Handle.GetFurnitureOld,
+    'af': Handle.AddFurnitureOld,
+    'au': Handle.AddIglooUpgradeOld,
+    'ur': Handle.UpdateRoomOld,
     'sp': Handle.SetPositionOld,
     'se': Handle.SendEmoteOld,
     'sb': Handle.SnowballOld,
@@ -343,7 +365,9 @@ const HANDLER_MAPPING: HandlerMapping = {
       'h': Handle.Heartbeat
     },
     'r': {
-      'gtc': Handle.GetTotalCoins
+      'gtc': Handle.GetTotalCoins,
+      'or': Handle.OpenIglooOld,
+      'cr': Handle.CloseIglooOld
     },
     's': {
       'upc': Handle.UpdateColor,

@@ -732,11 +732,17 @@ export class Client {
   }
 
   leaveRoom(): void {
-    const players = this.room.players.filter((p) => p.penguin.id !== this.penguin.id);
+    const currentRoom = this.room;
+    const players = currentRoom.players.filter((p) => p.penguin.id !== this.penguin.id);
     // because minigames get the player from their previous room, you can't
     // send the remove player packet to the player leaving otherwise it won't
     // find itself and minigame features (the penguin color) won't work
-    this.room.removePlayer(this);
+    currentRoom.removePlayer(this);
+
+    if (this.isBot) {
+      currentRoom.botGroup.removeBot(this);
+    }
+
     this.sendRoomXt('rp', this.penguin.id, ...players.map((p) => p.penguinString));
   }
 
@@ -1481,6 +1487,19 @@ export class BotGroup {
     this._bots.set(name, bot);
     bot.joinRoom(startRoom);
     return bot;
+  }
+
+  removeBot(target: Bot | Client | string): void {
+    if (typeof target === 'string') {
+      this._bots.delete(target);
+      return;
+    }
+
+    if ('isBot' in target && !target.isBot) {
+      return;
+    }
+
+    this._bots.delete(target.penguin.name);
   }
 
   say(message: string, target?: string): void {

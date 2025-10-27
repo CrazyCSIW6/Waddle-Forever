@@ -390,6 +390,34 @@ function addCatalogues(map: FileTimelineMap): void {
   map.addDateRefMap('play/v2/content/local/en/catalogues/furniture.swf', FURNITURE_CATALOGS);
   map.addDateRefMap('play/v2/content/local/en/catalogues/igloo.swf', IGLOO_CATALOGS);
 
+  // Engine 1 Catalogues - Client always requests furniture0603, igloo0604, or blank .swf
+  // Map these to appropriate timeline versions
+  map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0510.swf', '2005-10-24');
+  map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0511.swf', '2005-11-01');
+  map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0512.swf', '2005-12-01');
+  map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0601.swf', '2006-01-01');
+  map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0602.swf', '2006-02-03');
+  map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0603.swf', '2006-03-03');
+  map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0604.swf', '2006-04-07');
+  map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0605.swf', '2006-05-05');
+  map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0606.swf', '2006-06-02');
+  
+  // Igloo catalogue - Client requests igloo0604
+  map.add('artwork/catalogue/igloo0604.swf', 'mammoth:artwork/catalogue/Igloo_Pre0604.swf', '2005-10-24');
+  map.add('artwork/catalogue/igloo0604.swf', 'mammoth:artwork/catalogue/Igloo_0604.swf', '2006-04-07');
+  map.add('artwork/catalogue/igloo0604.swf', 'mammoth:artwork/catalogue/Igloo_0605.swf', '2006-05-05');
+  map.add('artwork/catalogue/igloo0604.swf', 'mammoth:artwork/catalogue/Igloo_0606.swf', '2006-06-02');
+  
+  // Blank catalogue request (client bug) - fallback to furniture0603
+  map.add('artwork/catalogue/.swf', 'mammoth:artwork/catalogue/Furniture_0510.swf', '2005-10-24');
+  map.add('artwork/catalogue/.swf', 'mammoth:artwork/catalogue/Furniture_0511.swf', '2005-11-01');
+  map.add('artwork/catalogue/.swf', 'mammoth:artwork/catalogue/Furniture_0512.swf', '2005-12-01');
+  map.add('artwork/catalogue/.swf', 'mammoth:artwork/catalogue/Furniture_0601.swf', '2006-01-01');
+  map.add('artwork/catalogue/.swf', 'mammoth:artwork/catalogue/Furniture_0602.swf', '2006-02-03');
+  map.add('artwork/catalogue/.swf', 'mammoth:artwork/catalogue/Furniture_0603.swf', '2006-03-03');
+  map.add('artwork/catalogue/.swf', 'mammoth:artwork/catalogue/Furniture_0604.swf', '2006-04-07');
+  map.add('artwork/catalogue/.swf', 'mammoth:artwork/catalogue/Furniture_0605.swf', '2006-05-05');
+  map.add('artwork/catalogue/.swf', 'mammoth:artwork/catalogue/Furniture_0606.swf', '2006-06-02');
 
   const addRockhoperCatalog = (date: string, file: FileRef) => {
     map.add('play/v2/content/local/en/catalogues/pirate.swf', file, date);

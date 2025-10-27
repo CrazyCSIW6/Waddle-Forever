@@ -882,7 +882,7 @@ const DIALOGUE = {
     ]
   },
   
-  // Snowball hit reactions
+  // Snowball hit reactions (general - when NOT in Snow Forts)
   snowballHit: {
     child: [
       'HEY', 'STOP IT', 'that hurt', 'why did you do that', 'stop throwing snowballs',
@@ -905,6 +905,33 @@ const DIALOGUE = {
       'really', 'was that necessary', 'very mature', 'grow up',
       'thats childish', 'please dont', 'come on now', 'not funny',
       'stop that', 'inappropriate', 'thats enough'
+    ]
+  },
+  
+  // Snowball hit reactions in Snow Forts (playful/competitive)
+  snowballHitForts: {
+    child: [
+      'haha got me', 'nice shot', 'good throw', 'youre going down',
+      'this is fun', 'take that', 'missed me', 'almost got me',
+      'my turn', 'watch this', 'haha', 'snowball fight',
+      'gotcha', 'come on', 'lets go'
+    ],
+    preteen: [
+      'nice one', 'good shot', 'not bad', 'lucky shot',
+      'bring it', 'game on', 'oh its on', 'youre dead',
+      'haha nice', 'take this', 'here we go', 'lets fight',
+      'direct hit', 'ouch lol', 'ur on', 'rematch'
+    ],
+    teen: [
+      'nice shot', 'good aim', 'alright alright', 'not bad',
+      'oh its on now', 'you want war', 'game on',
+      'lucky hit', 'decent throw', 'bring it on',
+      'haha good one', 'alright then', 'here we go'
+    ],
+    adult: [
+      'nice throw', 'good shot', 'well aimed', 'impressive',
+      'haha got me', 'fair play', 'good game', 'nice one',
+      'here we go', 'game on', 'alright then'
     ]
   }
 };
@@ -1767,18 +1794,24 @@ function applyFollowerBehavior(bot: Client, room: any, intervals: NodeJS.Timeout
  * This overrides all other behaviors when a party hat is spotted
  */
 function applyPartyHatAttractionBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[], age: BotAge) {
+  let partyHatTarget: Client | null = null;
+  
   const attractionInterval = setInterval(() => {
     if (bot.room !== room) {
       clearInterval(attractionInterval);
       return;
     }
     
-    // Find ANY player or bot with a party hat (head item ID 413)
+    // Find ALL players or bots with a party hat (head item ID 413)
     const partyHatWearers = room.players.filter((p: Client) => p.penguin.head === 413);
     
-    if (partyHatWearers.length > 0) {
-      // Pick the closest party hat wearer
-      let closestTarget: Client | null = null;
+    // Check if current target is still valid (in room, still has hat)
+    if (partyHatTarget && (partyHatTarget.room !== room || partyHatTarget.penguin.head !== 413)) {
+      partyHatTarget = null;
+    }
+    
+    // If we don't have a target, pick the closest party hat wearer
+    if (!partyHatTarget && partyHatWearers.length > 0) {
       let closestDistance = Infinity;
       
       for (const target of partyHatWearers) {
@@ -1787,35 +1820,39 @@ function applyPartyHatAttractionBehavior(bot: Client, room: any, intervals: Node
         );
         if (distance < closestDistance) {
           closestDistance = distance;
-          closestTarget = target;
+          partyHatTarget = target;
         }
       }
+    }
+    
+    // Swarm the target!
+    if (partyHatTarget && partyHatTarget.room === room) {
+      const distance = Math.sqrt(
+        Math.pow(partyHatTarget.x - bot.x, 2) + Math.pow(partyHatTarget.y - bot.y, 2)
+      );
       
-      if (closestTarget) {
-        // IMMEDIATELY move towards the party hat wearer
-        // Kids get VERY close (50-80 pixels), preteens slightly less close (80-120 pixels)
-        const minDistance = age === 'child' ? 50 : 80;
-        const maxDistance = age === 'child' ? 80 : 120;
+      // Kids get VERY close (50-80 pixels), preteens slightly less close (80-120 pixels)
+      const minDistance = age === 'child' ? 50 : 80;
+      const maxDistance = age === 'child' ? 80 : 120;
+      
+      if (distance > maxDistance) {
+        // Move closer with some randomness
+        const angle = Math.atan2(partyHatTarget.y - bot.y, partyHatTarget.x - bot.x);
+        const targetDistance = randomInt(minDistance, maxDistance);
+        const newX = partyHatTarget.x - Math.cos(angle) * targetDistance + randomInt(-20, 20);
+        const newY = partyHatTarget.y - Math.sin(angle) * targetDistance + randomInt(-20, 20);
         
-        if (closestDistance > maxDistance) {
-          // Move closer with some randomness
-          const angle = Math.atan2(closestTarget.y - bot.y, closestTarget.x - bot.x);
-          const targetDistance = randomInt(minDistance, maxDistance);
-          const newX = closestTarget.x - Math.cos(angle) * targetDistance + randomInt(-20, 20);
-          const newY = closestTarget.y - Math.sin(angle) * targetDistance + randomInt(-20, 20);
-          
-          bot.setPosition(
-            Math.max(100, Math.min(700, newX)),
-            Math.max(100, Math.min(500, newY))
-          );
-        }
-        
-        // Spam beta hat chat when close
-        if (closestDistance < 150 && Math.random() < 0.4) {
-          const message = getBotChatMessage(bot, 'betaHat', room);
-          if (message) {
-            botSendChat(bot, message);
-          }
+        bot.setPosition(
+          Math.max(100, Math.min(700, newX)),
+          Math.max(100, Math.min(500, newY))
+        );
+      }
+      
+      // Spam beta hat chat when close
+      if (distance < 150 && Math.random() < 0.4) {
+        const message = getBotChatMessage(bot, 'betaHat', room);
+        if (message) {
+          botSendChat(bot, message);
         }
       }
     }
@@ -2022,7 +2059,12 @@ function detectSnowballHit(room: any, targetX: number, targetY: number, thrower:
       if (behavior) {
         // Chat reaction to being hit (70% chance)
         if (Math.random() < 0.7) {
-          const reactions = DIALOGUE.snowballHit[behavior.age];
+          // Use different dialogue for Snow Forts (playful) vs other rooms (annoyed)
+          const isSnowForts = room.id === ROOM_IDS.SNOW_FORTS;
+          const reactions = isSnowForts 
+            ? DIALOGUE.snowballHitForts[behavior.age]
+            : DIALOGUE.snowballHit[behavior.age];
+          
           if (reactions) {
             const reaction = reactions[randomInt(0, reactions.length - 1)];
             setTimeout(() => {

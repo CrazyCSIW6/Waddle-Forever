@@ -6,7 +6,7 @@ import { commandsHandler } from '../commands';
 import { Handle } from '../handles';
 import { getServerPopulation } from '../../servers';
 import { randomInt } from '../../../common/utils';
-import { isGreaterOrEqual, Version } from '../../routes/versions';
+import { isGreaterOrEqual, isLower, Version } from '../../routes/versions';
 
 const handler = new Handler();
 
@@ -59,7 +59,8 @@ const botBehaviors = new Map<Client, {
   target?: Client, 
   intervals: NodeJS.Timeout[],
   hasBetaHat?: boolean,
-  lastChatTime?: number
+  lastChatTime?: number,
+  isNonMember?: boolean
 }>();
 
 // Catalog items organized by release date
@@ -392,8 +393,20 @@ function spawnSingleBot(room: any, serverPopulation: number) {
   else if (ageRoll < 0.80) age = 'teen'; // 14-17 years old
   else age = 'adult'; // 18+ years old
   
+  // 30% chance to be a non-member (no clothes)
+  const isNonMember = Math.random() < 0.3;
+  if (isNonMember) {
+    bot.penguin.head = 0;
+    bot.penguin.face = 0;
+    bot.penguin.neck = 0;
+    bot.penguin.body = 0;
+    bot.penguin.hand = 0;
+    bot.penguin.feet = 0;
+    bot.penguin.pin = 0;
+  }
+  
   // Check if bot has party hat (beta tester)
-  const hasBetaHat = bot.penguin.head === 1;
+  const hasBetaHat = !isNonMember && bot.penguin.head === 1;
 
   const { x, y } = pickSpawnCoordinates(room, bot);
   bot.setPosition(x, y);
@@ -401,7 +414,7 @@ function spawnSingleBot(room: any, serverPopulation: number) {
 
   // Initialize bot behavior tracking
   const intervals: NodeJS.Timeout[] = [];
-  botBehaviors.set(bot, { personality, age, intervals, hasBetaHat, lastChatTime: 0 });
+  botBehaviors.set(bot, { personality, age, intervals, hasBetaHat, lastChatTime: 0, isNonMember });
 
   // Apply personality-specific behavior
   switch (personality) {
@@ -596,54 +609,217 @@ function getAvailableBotName(room: any): string {
 const DIALOGUE = {
   // General chat by age
   child: {
-    greetings: ['hi', 'hello', 'hey', 'hi everyone', 'sup'],
-    general: ['this is fun', 'i like this game', 'wanna be friends?', 'cool', 'lol', 'haha', 'omg', 'wow'],
-    questions: ['what do you do here?', 'how do i get coins?', 'where is the pizza place?', 'wanna play?']
+    greetings: [
+      'hi', 'hello', 'hey', 'hi everyone', 'sup', 'hiii', 'heyyy', 'hi guys', 
+      'helo', 'hai', 'yo', 'hiya', 'greetings', 'hi everybody', 'wave'
+    ],
+    general: [
+      'this is fun', 'i like this game', 'wanna be friends?', 'cool', 'lol', 'haha', 'omg', 'wow',
+      'this is awesome', 'yay', 'woohoo', 'weee', 'im having fun', 'this place is cool',
+      'look at me', 'watch this', 'im a penguin', 'penguins are cool', 'im blue', 'im red',
+      'i love snow', 'lets play', 'this is the best', 'so cool', 'amazing', 'awesome game',
+      'my mom said i can play for 30 minutes', 'my brother showed me this game', 
+      'im only 8', 'im 9 years old', 'this is my first time', 'i just joined',
+      'where is everyone', 'come here', 'follow me', 'wait for me', 'dont leave',
+      'im bored', 'what now', 'this is boring', 'nvm this is fun again'
+    ],
+    questions: [
+      'what do you do here?', 'how do i get coins?', 'where is the pizza place?', 'wanna play?',
+      'can we be friends?', 'whats your name?', 'how old are you?', 'where are you from?',
+      'is this game free?', 'do i need to pay?', 'can i change my color?',
+      'where do i buy clothes?', 'can you show me around?', 'what room is this?', 'how do i leave?',
+      'how do i dance?', 'where did you get that?', 'can i have that?', 'will you give me coins?'
+    ]
   },
   preteen: {
-    greetings: ['hey', 'hi', 'sup', 'whats up', 'yo'],
-    general: ['lol', 'cool', 'nice', 'awesome', 'this is cool', 'haha', 'rofl', 'lmao', 'brb'],
-    questions: ['wanna play card jitsu?', 'anyone wanna go to the ice berg?', 'how do i get more coins?']
+    greetings: [
+      'hey', 'hi', 'sup', 'whats up', 'yo', 'hey guys', 'wassup', 'heyo', 
+      'sup everyone', 'hey there', 'hi all', 'ayy', 'yoo', 'hey yall'
+    ],
+    general: [
+      'lol', 'cool', 'nice', 'awesome', 'this is cool', 'haha', 'rofl', 'lmao', 'brb',
+      'gtg', 'bbl', 'back', 'im back', 'anyone here', 'anyone online',
+      'this game is fun', 'bored', 'what to do', 'lmao this is funny',
+      'rofl', 'kek', 'omg', 'wtf', 'lolol', 'hahaha', 'XD', 'xD',
+      'getting coins', 'saving up', 'buying stuff soon', 'need more coins',
+      'anyone wanna hang out', 'im 12', 'im 13', 'middle school gang',
+      'school was boring today', 'homework sucks', 'cant wait for weekend',
+      'my parents let me play after homework', 'dinner time soon', 'gotta go soon'
+    ],
+    questions: [
+      'how do i get more coins?', 'whats the fastest way to get coins?', 'where can i buy stuff?', 
+      'anyone got membership?', 'is membership worth it?', 'how much does membership cost?', 
+      'anyone know any cheats?', 'are there any secrets?',
+      'wanna add me?', 'can we be buddies?',
+      'how do i change rooms?', 'where should i go?', 'whats fun to do?'
+    ]
   },
   teen: {
-    greetings: ['hey', 'hi', 'sup', 'whats up', 'hey guys'],
-    general: ['cool', 'nice', 'lol', 'haha', 'this game is actually pretty fun', 'interesting', 'whatever'],
-    questions: ['anyone else here from the forums?', 'is there a guide for this game?', 'what are you supposed to do here?']
+    greetings: [
+      'hey', 'hi', 'sup', 'whats up', 'hey guys', 'yo', 'whats good', 
+      'sup yall', 'evening', 'afternoon', 'morning', 'hey everyone'
+    ],
+    general: [
+      'cool', 'nice', 'lol', 'haha', 'this game is actually pretty fun', 'interesting', 'whatever',
+      'not bad', 'decent game', 'surprisingly good', 'kinda addicting ngl',
+      'bored so im here', 'killing time', 'procrastinating homework', 
+      'should be studying', 'exam tomorrow but here i am', 'just chilling',
+      'been playing this for a while now', 'found this on a forum', 'saw this online',
+      'my younger sibling plays this', 'babysitting and got curious',
+      'this is weirdly relaxing', 'good way to destress', 'better than myspace',
+      'anyone else in high school?', 'junior year here', 'senior here',
+      'applying to colleges soon', 'SATs are brutal', 'this beats studying'
+    ],
+    questions: [
+      'anyone else here from the forums?', 'is there a guide for this game?', 'what are you supposed to do here?',
+      'whats the endgame?', 'is there pvp?', 'any competitive aspects?',
+      'how active is the community?', 'worth getting into?', 'any updates planned?',
+      'how long have you been playing?', 'whats your main goal here?',
+      'any pro tips?', 'whats the meta?', 'best strategy for coins?',
+      'membership benefits worth it?', 'any rare items?', 'trading system exist?'
+    ]
   },
   adult: {
-    greetings: ['hello', 'hi', 'hey everyone', 'greetings'],
-    general: ['interesting game', 'this is quite charming', 'not bad', 'clever design', 'my kid likes this game'],
-    questions: ['is this game appropriate for children?', 'how does the membership work?', 'whats the goal of this game?']
+    greetings: [
+      'hello', 'hi', 'hey everyone', 'greetings', 'good day', 'hello there',
+      'hi folks', 'afternoon everyone', 'evening all', 'howdy'
+    ],
+    general: [
+      'interesting game', 'this is quite charming', 'not bad', 'clever design', 'my kid likes this game',
+      'my son plays this', 'my daughter loves this', 'playing with my kid',
+      'checking this out for my children', 'seeing what the fuss is about',
+      'surprisingly well designed', 'good moderation system', 'safe environment for kids',
+      'impressed by the chat filter', 'nice community features', 'well thought out',
+      'good educational value', 'teaches social skills', 'nice creative outlet',
+      'better than TV', 'glad this exists', 'wholesome content',
+      'refreshing compared to other games', 'no violence which is great',
+      'taking a break from work', 'coffee break', 'lunch break entertainment',
+      'interesting business model', 'well monetized', 'good freemium approach'
+    ],
+    questions: [
+      'is this game appropriate for children?', 'how does the membership work?', 'whats the goal of this game?',
+      'what age range is this for?', 'how is moderation handled?', 'are there parental controls?',
+      'how do i monitor my childs activity?', 'is the chat safe?', 'any concerning content?',
+      'how much does membership cost?', 'are there hidden fees?', 'subscription or one-time?',
+      'can progress be saved?', 'multi-device support?', 'how to reset password?',
+      'who develops this?', 'company background?', 'how long has this been around?'
+    ]
   },
   
   // Beta testing specific
   beta: {
-    child: ['this is so cool', 'i love being a beta tester', 'i got to test this game!', 'im helping make the game!'],
-    preteen: ['this beta test is awesome', 'im testing the game', 'finding bugs is fun', 'beta testing rocks'],
-    teen: ['beta testing is pretty fun', 'finding bugs for the devs', 'this game has potential', 'glad i got into the beta'],
-    adult: ['interesting beta test', 'good to see the game developing', 'been testing since august', 'providing feedback to the team']
+    child: [
+      'this is so cool', 'i love being a beta tester', 'i got to test this game!', 'im helping make the game!',
+      'im a beta tester', 'i test games', 'im special', 'i got picked', 'they chose me',
+      'found bugs today', 'helping the developers', 'making the game better',
+      'beta party was amazing', 'the party was so fun', 'i went to the party',
+      'im so lucky', 'not everyone can play', 'exclusive access', 'early player'
+    ],
+    preteen: [
+      'this beta test is awesome', 'im testing the game', 'finding bugs is fun', 'beta testing rocks',
+      'official beta tester here', 'been here since beta', 'beta crew',
+      'helping with development', 'reporting bugs', 'giving feedback',
+      'the beta party was sick', 'party was epic', 'got my hat at the party',
+      'been playing since august', 'early adopter', 'before it was popular'
+    ],
+    teen: [
+      'beta testing is pretty fun', 'finding bugs for the devs', 'this game has potential', 'glad i got into the beta',
+      'interesting to see game development', 'watching this evolve', 'been here since day one',
+      'providing constructive feedback', 'QA testing basically', 'unpaid QA lol',
+      'beta party was a good time', 'party was cool', 'met some cool people at the party',
+      'curious how this will turn out', 'has promise', 'could be big'
+    ],
+    adult: [
+      'interesting beta test', 'good to see the game developing', 'been testing since august', 'providing feedback to the team',
+      'professional perspective on the beta', 'well organized test', 'good communication from devs',
+      'impressed with the development process', 'solid foundation', 'good potential here',
+      'the party was well executed', 'nice community event', 'good engagement strategy',
+      'interested in the business side', 'watching this company', 'could be successful'
+    ]
   },
   
   // Party hat reactions (post Oct 24, 2005)
   betaHat: {
-    child: ['BETA!!', 'OMG BETA TESTER', 'can i have coins pls', 'can u give me items', 'how did u get that hat', 'GIVE ME COINS'],
-    preteen: ['whoa beta hat', 'beta tester!', 'can i have some coins?', 'thats so rare', 'lucky'],
-    teen: ['nice beta hat', 'og beta tester', 'thats rare', 'cool hat'],
-    adult: ['ah a beta tester', 'nice to see an og player', 'you were here for the party']
+    child: [
+      'BETA!!', 'OMG BETA TESTER', 'can i have coins pls', 'can u give me items', 'how did u get that hat', 'GIVE ME COINS',
+      'BETA TESTER!!', 'ur a beta', 'BETA', 'omg ur so cool', 'can i be beta too',
+      'HOW DO I GET THAT', 'I WANT THAT HAT', 'PLEASE GIVE ME COINS', 'PLEASE GIVE ME ITEMS',
+      'can u help me', 'can u give me stuff', 'share coins pls', 'ur rich right',
+      'teach me', 'show me secrets', 'tell me cheats', 'how do i get hat',
+      'are you famous', 'are you special', 'how long have you played'
+    ],
+    preteen: [
+      'whoa beta hat', 'beta tester!', 'can i have some coins?', 'thats so rare', 'lucky',
+      'yo beta tester', 'og player', 'respect', 'thats sick', 'thats dope',
+      'how much is that worth', 'thats gotta be rare', 'never seen that before',
+      'can you spare some coins', 'hook me up', 'help a noob out',
+      'how did you get in beta', 'how do i get beta access', 'teach me your ways',
+      'youre like a veteran', 'youve been here forever'
+    ],
+    teen: [
+      'nice beta hat', 'og beta tester', 'thats rare', 'cool hat',
+      'respect for being there', 'og player right here', 'been here since the start',
+      'thats actually pretty cool', 'rare item nice', 'exclusive gear',
+      'must be worth a lot', 'probably cant get that anymore', 'limited edition',
+      'how was the beta party', 'heard the party was cool', 'wish i was there',
+      'youve seen this game evolve', 'watched it grow'
+    ],
+    adult: [
+      'ah a beta tester', 'nice to see an og player', 'you were here for the party',
+      'early adopter', 'original player', 'been here from the start',
+      'interesting seeing early players', 'you helped test this',
+      'your feedback helped shape this', 'thanks for testing',
+      'how has the game changed', 'whats different from beta', 'hows it evolved'
+    ]
   },
   
   // Easter egg item reactions
   easterEgg: {
-    child: ['whoa cool item', 'how did u get that?', 'i want that', 'where did u find that'],
-    preteen: ['thats cool', 'nice item', 'how did u get that', 'where is that from'],
-    teen: ['thats a rare item', 'never seen that before', 'how did you get that?', 'is that even in the catalog?'],
-    adult: ['interesting item', 'havent seen that before', 'unique piece']
+    child: [
+      'whoa cool item', 'how did u get that?', 'i want that', 'where did u find that',
+      'COOL', 'OMG', 'AWESOME', 'how do i get that', 'where is that',
+      'ive never seen that', 'thats so cool', 'i need that', 'gimme that',
+      'teach me', 'show me', 'help me find it', 'is it in the shop',
+      'how much is that', 'is it expensive', 'can i buy that'
+    ],
+    preteen: [
+      'thats cool', 'nice item', 'how did u get that', 'where is that from',
+      'yo thats sick', 'thats dope', 'never seen that', 'is that new',
+      'rare item?', 'exclusive?', 'limited edition?', 'special item',
+      'where do i find that', 'catalog item?', 'member only?',
+      'thats unique', 'stand out item', 'pretty cool'
+    ],
+    teen: [
+      'thats a rare item', 'never seen that before', 'how did you get that?', 'is that even in the catalog?',
+      'that looks unique', 'unusual item', 'not standard gear',
+      'special edition?', 'event exclusive?', 'promotional item?',
+      'whats the story behind that', 'how rare is that', 'bet thats hard to get',
+      'impressive collection', 'good find', 'nice piece'
+    ],
+    adult: [
+      'interesting item', 'havent seen that before', 'unique piece',
+      'unusual design', 'distinctive', 'stands out',
+      'special edition i assume', 'limited availability?', 'exclusive item?',
+      'good taste', 'nice choice', 'well selected'
+    ]
   },
   
   // Beta tester defending themselves
   betaDefense: {
-    teen: ['give me some space', 'stop begging', 'i cant give you anything', 'leave me alone'],
-    adult: ['i dont have anything to give you', 'please stop following me', 'this is getting ridiculous']
+    teen: [
+      'give me some space', 'stop begging', 'i cant give you anything', 'leave me alone',
+      'dude seriously stop', 'youre being annoying', 'back off', 'personal space please',
+      'i literally cant give you coins', 'thats not how it works', 'stop asking',
+      'this is getting old', 'find someone else', 'im not your bank',
+      'go earn your own coins', 'just play the game normally'
+    ],
+    adult: [
+      'i dont have anything to give you', 'please stop following me', 'this is getting ridiculous',
+      'i cannot transfer items', 'the game doesnt work that way', 'please understand',
+      'this is becoming harassment', 'i need my personal space', 'kindly leave me alone',
+      'ive asked politely', 'this needs to stop', 'respect my boundaries',
+      'im here to enjoy the game', 'not a charity', 'earn items yourself'
+    ]
   },
   
   // Beta tester complaints
@@ -652,7 +828,16 @@ const DIALOGUE = {
     'cant even walk around without being swarmed',
     'maybe i should take off my hat',
     'this is why we cant have nice things',
-    'the beta party was so much better'
+    'the beta party was so much better',
+    'getting mobbed every room i enter',
+    'this hat is becoming a curse',
+    'cant have a normal conversation anymore',
+    'everyone just wants free stuff',
+    'no one understands how the game works',
+    'wish there was a private server',
+    'the community has changed',
+    'it was better when there were fewer players',
+    'miss the early days'
   ],
   
   // Jokester beta lines
@@ -660,12 +845,373 @@ const DIALOGUE = {
     'lol im getting called a beta here too now',
     'beta tester? more like be-a pest-er',
     'i was beta testing before it was cool',
-    'my hat brings all the noobs to the yard'
-  ]
+    'my hat brings all the noobs to the yard',
+    'professionally annoyed since august 2005',
+    'beta tester is just a fancy word for guinea pig',
+    'i found bugs so you dont have to lol',
+    'my hat is a noob magnet',
+    'should have worn a disguise',
+    'famous for a hat lmao'
+  ],
+  
+  // Non-member dialogue
+  nonMember: {
+    child: [
+      'i cant afford clothes', 'my parents wont buy membership', 'i want cool stuff', 
+      'how do i get free items', 'i wish i had clothes', 'everyone has cool stuff except me',
+      'can someone give me coins', 'i need membership', 'i want to buy things'
+    ],
+    preteen: [
+      'saving up for membership', 'cant afford membership yet', 'non member life',
+      'grinding for coins', 'wish i had membership', 'member items look cool',
+      'how do non members get stuff', 'being broke sucks', 'need more coins'
+    ],
+    teen: [
+      'non member grind', 'cant justify membership cost', 'free to play life',
+      'membership is expensive', 'making do without membership', 'non member struggle',
+      'anyone else non member', 'limited options as non member'
+    ],
+    adult: [
+      'not purchasing membership', 'staying free to play', 'testing before buying membership',
+      'evaluating if membership is worth it', 'free account for now'
+    ]
+  }
 };
 
 // Easter egg item IDs
 const EASTER_EGG_ITEMS = [452, 233]; // Viking Helmet, Red Electric Guitar
+
+/**
+ * Get timeline-specific dialogue options based on version
+ */
+function getTimelineDialogue(version: Version, age: BotAge): string[] {
+  const timelineMessages: string[] = [];
+  
+  // Sport Shop opened (2005-11-03)
+  if (isGreaterOrEqual(version, '2005-11-03') && isLower(version, '2005-11-15')) {
+    if (age === 'child') {
+      timelineMessages.push('new sport shop', 'sports shop is open', 'buying sports stuff', 'sport shop is cool');
+    } else if (age === 'preteen') {
+      timelineMessages.push('sport shop just opened', 'new shop at ski village', 'checking out sport shop');
+    } else if (age === 'teen') {
+      timelineMessages.push('new sport shop opened', 'sports clothing shop');
+    }
+  }
+  
+  // Puffle Discovery - First Sightings (2005-11-15 to 2005-11-21)
+  // Pink and blue puffles spotted at Snow Forts, Night Club, Ice Rink
+  if (isGreaterOrEqual(version, '2005-11-15') && isLower(version, '2005-11-21')) {
+    if (age === 'child') {
+      timelineMessages.push('I SAW A FLUFFY THING', 'theres little creatures here', 'did you see that',
+        'what was that fuzzy thing', 'something is moving around', 'i saw something pink',
+        'blue fluffy thing', 'what are those', 'they are so cute', 'i want to catch one');
+    } else if (age === 'preteen') {
+      timelineMessages.push('did anyone see those creatures', 'fluffy things spotted', 'whats with the fuzzy creatures',
+        'saw something weird moving', 'little creatures around', 'anyone else seeing things',
+        'pink and blue creatures', 'what are they');
+    } else if (age === 'teen') {
+      timelineMessages.push('anyone else seeing creatures', 'fluffy things wandering around',
+        'saw some kind of creature', 'whats going on with these things', 'mysterious creatures');
+    } else if (age === 'adult') {
+      timelineMessages.push('noticed some little creatures', 'seeing strange animals here', 'small creatures around',
+        'what are these things', 'cute little creatures');
+    }
+  }
+  
+  // Puffle Discovery - Official Documentation (2005-11-21 to 2005-12-01)
+  // Newspaper Issue #6: "little fluffy things" officially confirmed, black and green also spotted
+  if (isGreaterOrEqual(version, '2005-11-21') && isLower(version, '2005-12-01')) {
+    if (age === 'child') {
+      timelineMessages.push('they caught one', 'the newspaper says they exist', 'little fluffy things are real',
+        'they are friendly', 'i saw green ones too', 'black ones are cool', 'four types now',
+        'the creatures are safe', 'can we keep them');
+    } else if (age === 'preteen') {
+      timelineMessages.push('newspaper confirmed the sightings', 'fluffy things are real', 'they captured one as proof',
+        'green and black ones spotted too', 'four different types', 'they seem friendly',
+        'what are they called', 'still no official name');
+    } else if (age === 'teen') {
+      timelineMessages.push('newspaper documented the creatures', 'official confirmation now',
+        'caught one as evidence', 'black and green types too', 'apparently friendly',
+        'wonder what they are');
+    } else if (age === 'adult') {
+      timelineMessages.push('newspaper confirmed they exist', 'so they are real after all',
+        'four different colors now', 'they seem harmless', 'pretty cute actually');
+    }
+  }
+  
+  // Puffle Naming Contest (2005-12-01 to 2005-12-08)
+  // Newspaper Issue #7: naming contest announced, 5000 coin prize
+  if (isGreaterOrEqual(version, '2005-12-01') && isLower(version, '2005-12-08')) {
+    if (age === 'child') {
+      timelineMessages.push('naming contest', 'we get to name them', 'i submitted a name',
+        'what should we call them', '5000 coins for the winner', 'i hope my name wins',
+        'contest ends soon', 'thinking of names', 'what did you call them');
+    } else if (age === 'preteen') {
+      timelineMessages.push('naming contest is on', 'submitted my name idea', 'contest for 5000 coins',
+        'what name did you submit', 'hope i win', 'naming the creatures',
+        'contest deadline is dec 7', 'good prize for naming');
+    } else if (age === 'teen') {
+      timelineMessages.push('naming competition', 'submitted an entry', '5000 coin prize',
+        'contest ends december 7th', 'wonder what theyll be called');
+    } else if (age === 'adult') {
+      timelineMessages.push('naming contest is interesting', 'submitted a name idea',
+        'letting the community choose', 'nice prize for the winner');
+    }
+  }
+  
+  // Puffles Named (2005-12-08 onwards)
+  // Newspaper Issue #8: Official name "Puffles" announced (winners: Yolam08, Wafflepye, Gronnie)
+  if (isGreaterOrEqual(version, '2005-12-08') && isLower(version, '2005-12-20')) {
+    if (age === 'child') {
+      timelineMessages.push('they are called PUFFLES', 'puffles won', 'the name is puffles',
+        'yolam08 won', 'wafflepye won too', 'gronnie also won', 'three winners got 5000 coins',
+        'i like the name puffles', 'puffles is a good name', 'congrats to the winners');
+    } else if (age === 'preteen') {
+      timelineMessages.push('official name is puffles', 'puffles won the contest', 'three people won',
+        'yolam08 wafflepye and gronnie', 'they each got 5000 coins', 'puffles is a cool name',
+        'contest results are in', 'pretty good name choice');
+    } else if (age === 'teen') {
+      timelineMessages.push('theyre called puffles now', 'puffles was the winning name',
+        'three winners split the prize', 'not a bad name', 'puffles it is');
+    } else if (age === 'adult') {
+      timelineMessages.push('so theyre called puffles', 'puffles is a good name',
+        'three people won', 'nice choice by the community');
+    }
+  }
+  
+  // Pizza Parlor opened (2006-02-24)
+  if (isGreaterOrEqual(version, '2006-02-24')) {
+    if (age === 'child') {
+      timelineMessages.push('lets go to the pizza place', 'i love pizza', 'pizza time');
+    } else if (age === 'preteen') {
+      timelineMessages.push('pizza parlor is cool', 'getting pizza', 'pizza party');
+    }
+  }
+  
+  // Puffles - General (only after Pet Shop opens on 2006-03-17)
+  if (isGreaterOrEqual(version, '2006-03-17')) {
+    if (age === 'child') {
+      timelineMessages.push('got a puffle?', 'which puffle is best?', 'i love puffles',
+        'how do i get a puffle?', 'whats a puffle?', 'where is the pet shop?', 'can i have a pet?');
+    } else if (age === 'preteen') {
+      timelineMessages.push('got a puffle?', 'which puffle is best?', 'puffle colors');
+    }
+  }
+  
+  // Pet Shop opened (2006-03-17) - NEW!
+  if (isGreaterOrEqual(version, '2006-03-17') && isLower(version, '2006-04-01')) {
+    if (age === 'child') {
+      timelineMessages.push('OMG THE NEW PET SHOP', 'have you seen the pet shop', 'the pet shop is here!', 'i want a puffle so bad');
+    } else if (age === 'preteen') {
+      timelineMessages.push('new pet shop is sick', 'finally puffles', 'pet shop just opened', 'getting a puffle today');
+    } else if (age === 'teen') {
+      timelineMessages.push('pet shop is actually cool', 'puffles are interesting', 'new pet shop opened');
+    }
+  }
+  
+  // Iceberg opened (2006-03-29) - NEW!
+  if (isGreaterOrEqual(version, '2006-03-29') && isLower(version, '2006-04-15')) {
+    if (age === 'child') {
+      timelineMessages.push('THE ICEBERG IS HERE', 'have you been to the iceberg', 'lets go to iceberg', 'iceberg is so cool');
+    } else if (age === 'preteen') {
+      timelineMessages.push('iceberg just opened', 'anyone at the iceberg', 'new iceberg room', 'iceberg is epic');
+    } else if (age === 'teen') {
+      timelineMessages.push('iceberg finally released', 'checking out the new iceberg', 'iceberg looks cool');
+    }
+  }
+  
+  // Iceberg exists (for questions)
+  if (isGreaterOrEqual(version, '2006-03-29')) {
+    if (age === 'child') {
+      timelineMessages.push('how do you tip the iceberg', 'can the iceberg tip', 'whats the iceberg secret');
+    } else if (age === 'preteen') {
+      timelineMessages.push('anyone wanna go to the iceberg', 'hows the iceberg tip work', 'iceberg secrets?');
+    }
+  }
+  
+  // Find Four released (2006-04-27)
+  if (isGreaterOrEqual(version, '2006-04-27') && isLower(version, '2006-05-15')) {
+    if (age === 'child') {
+      timelineMessages.push('find four is fun', 'wanna play find four', 'new game at lodge');
+    } else if (age === 'preteen') {
+      timelineMessages.push('find four tables are new', 'anyone play find four yet', 'new find four game');
+    }
+  }
+  
+  // Find Four exists
+  if (isGreaterOrEqual(version, '2006-04-27')) {
+    if (age === 'preteen') {
+      timelineMessages.push('wanna play find four');
+    }
+  }
+  
+  // PSA Missions (2006-08-18)
+  if (isGreaterOrEqual(version, '2006-08-18') && isLower(version, '2006-09-10')) {
+    if (age === 'preteen') {
+      timelineMessages.push('new PSA mission', 'secret agent mission', 'have you done the mission');
+    } else if (age === 'teen') {
+      timelineMessages.push('PSA missions are cool', 'secret agent stuff', 'mission was fun');
+    }
+  }
+  
+  // Lighthouse opened (2006-09-21) - NEW!
+  if (isGreaterOrEqual(version, '2006-09-21') && isLower(version, '2006-10-10')) {
+    if (age === 'child') {
+      timelineMessages.push('lighthouse is here', 'new lighthouse room', 'lighthouse is cool');
+    } else if (age === 'preteen') {
+      timelineMessages.push('lighthouse just opened', 'beacon and lighthouse are new', 'check out the lighthouse');
+    }
+  }
+  
+  // Aqua Grabber (2008-02-19)
+  if (isGreaterOrEqual(version, '2008-02-19') && isLower(version, '2008-03-10')) {
+    if (age === 'preteen') {
+      timelineMessages.push('aqua grabber is awesome', 'new aqua grabber game', 'anyone play aqua grabber yet');
+    } else if (age === 'teen') {
+      timelineMessages.push('aqua grabber is pretty good', 'new game at the iceberg', 'aqua grabber just released');
+    }
+  }
+  
+  // Card-Jitsu (2008-11-17) - NEW!
+  if (isGreaterOrEqual(version, '2008-11-17') && isLower(version, '2008-12-10')) {
+    if (age === 'child') {
+      timelineMessages.push('CARD JITSU IS HERE', 'have you played card jitsu', 'card jitsu is so cool', 'im gonna be a ninja');
+    } else if (age === 'preteen') {
+      timelineMessages.push('card jitsu just came out', 'new card jitsu game', 'dojo has card jitsu now', 'ninja training');
+    } else if (age === 'teen') {
+      timelineMessages.push('card jitsu is actually good', 'new card game at dojo', 'card jitsu released', 'ninja path');
+    } else if (age === 'adult') {
+      timelineMessages.push('interesting card game', 'card jitsu system', 'new dojo feature');
+    }
+  }
+  
+  // Card-Jitsu exists (after release)
+  if (isGreaterOrEqual(version, '2008-11-17')) {
+    if (age === 'child') {
+      timelineMessages.push('wanna play card jitsu', 'card jitsu time');
+    } else if (age === 'preteen') {
+      timelineMessages.push('wanna play card jitsu', 'anyone at the dojo', 'card jitsu match?');
+    } else if (age === 'teen') {
+      timelineMessages.push('card jitsu anyone', 'dojo?');
+    }
+  }
+  
+  return timelineMessages;
+}
+
+/**
+ * Get event-specific dialogue based on current date
+ */
+function getEventDialogue(version: Version, age: BotAge): string[] {
+  const eventMessages: string[] = [];
+  
+  // Beta Test Party (Sep 21, 2005 - 2 hours only)
+  if (isGreaterOrEqual(version, '2005-09-21') && isLower(version, '2005-09-22')) {
+    if (age === 'child') {
+      eventMessages.push('PARTY TIME', 'this party is awesome', 'best party ever', 'im at the party');
+    } else if (age === 'preteen') {
+      eventMessages.push('beta party is epic', 'party is so fun', 'everyone is here', 'party hype');
+    } else if (age === 'teen') {
+      eventMessages.push('beta party is cool', 'nice event', 'good turnout', 'party is fun');
+    }
+  }
+  
+  // Pizza Parlor Opening Party (Feb 2006)
+  if (isGreaterOrEqual(version, '2006-02-24') && isLower(version, '2006-03-01')) {
+    if (age === 'child') {
+      eventMessages.push('PIZZA PARTY', 'pizza parlor opening', 'new pizza place', 'pizza celebration');
+    } else if (age === 'preteen') {
+      eventMessages.push('pizza parlor grand opening', 'opening party', 'new building party');
+    }
+  }
+  
+  // Egg Hunt (April 2006)
+  if (isGreaterOrEqual(version, '2006-04-14') && isLower(version, '2006-04-17')) {
+    if (age === 'child') {
+      eventMessages.push('EGG HUNT', 'finding eggs', 'where are the eggs', 'egg hunting time', 'found any eggs');
+    } else if (age === 'preteen') {
+      eventMessages.push('egg hunt is on', 'hunting for eggs', 'anyone found eggs', 'egg locations');
+    } else if (age === 'teen') {
+      eventMessages.push('egg hunt event', 'looking for eggs', 'egg hunt challenge');
+    }
+  }
+  
+  // Cave Opening (May 2006)
+  if (isGreaterOrEqual(version, '2006-05-26') && isLower(version, '2006-06-01')) {
+    if (age === 'child') {
+      eventMessages.push('the cave opened', 'new cave', 'cave party', 'cave is cool');
+    } else if (age === 'preteen') {
+      eventMessages.push('cave grand opening', 'new mine area', 'exploring the cave');
+    }
+  }
+  
+  // Summer Party (June 2006)
+  if (isGreaterOrEqual(version, '2006-06-16') && isLower(version, '2006-06-26')) {
+    if (age === 'child') {
+      eventMessages.push('SUMMER PARTY', 'summer is here', 'beach party', 'summer fun');
+    } else if (age === 'preteen') {
+      eventMessages.push('summer party time', 'beach party is on', 'summer event');
+    } else if (age === 'teen') {
+      eventMessages.push('summer party', 'beach event', 'summer celebration');
+    }
+  }
+  
+  // Sport Party (Aug 2006)
+  if (isGreaterOrEqual(version, '2006-08-11') && isLower(version, '2006-08-22')) {
+    if (age === 'child') {
+      eventMessages.push('SPORT PARTY', 'sports event', 'playing sports', 'sports are fun');
+    } else if (age === 'preteen') {
+      eventMessages.push('sport party is cool', 'sports competition', 'sport event');
+    }
+  }
+  
+  // Lighthouse Party (Sep 2006)
+  if (isGreaterOrEqual(version, '2006-09-21') && isLower(version, '2006-10-05')) {
+    if (age === 'child') {
+      eventMessages.push('lighthouse party', 'new lighthouse', 'party at lighthouse', 'beacon party');
+    } else if (age === 'preteen') {
+      eventMessages.push('lighthouse grand opening', 'beacon and lighthouse party', 'new area party');
+    }
+  }
+  
+  // Halloween (Oct 2006)
+  if (isGreaterOrEqual(version, '2006-10-20') && isLower(version, '2006-11-02')) {
+    if (age === 'child') {
+      eventMessages.push('HALLOWEEN', 'spooky time', 'halloween party', 'trick or treat', 'scary decorations');
+    } else if (age === 'preteen') {
+      eventMessages.push('halloween event', 'spooky party', 'halloween is here', 'haunted party');
+    } else if (age === 'teen') {
+      eventMessages.push('halloween party', 'spooky decorations', 'halloween event');
+    }
+  }
+  
+  // Christmas/Holiday (Dec 2005-2006)
+  if ((isGreaterOrEqual(version, '2005-12-15') && isLower(version, '2005-12-27')) ||
+      (isGreaterOrEqual(version, '2006-12-15') && isLower(version, '2006-12-27'))) {
+    if (age === 'child') {
+      eventMessages.push('CHRISTMAS', 'holiday party', 'merry christmas', 'santa is here', 'christmas decorations');
+    } else if (age === 'preteen') {
+      eventMessages.push('christmas party', 'holiday event', 'merry christmas', 'festive decorations');
+    } else if (age === 'teen') {
+      eventMessages.push('christmas event', 'holiday party', 'festive season');
+    } else if (age === 'adult') {
+      eventMessages.push('holiday event', 'christmas celebration', 'festive decorations');
+    }
+  }
+  
+  // Card-Jitsu Release Party (Nov 2008)
+  if (isGreaterOrEqual(version, '2008-11-17') && isLower(version, '2008-11-25')) {
+    if (age === 'child') {
+      eventMessages.push('CARD JITSU PARTY', 'dojo party', 'ninja party', 'card jitsu event');
+    } else if (age === 'preteen') {
+      eventMessages.push('card jitsu launch party', 'dojo celebration', 'ninja event');
+    } else if (age === 'teen') {
+      eventMessages.push('card jitsu release event', 'dojo party', 'launch celebration');
+    }
+  }
+  
+  return eventMessages;
+}
 
 /**
  * Get a random chat message based on context
@@ -712,9 +1258,25 @@ function getBotChatMessage(bot: Client, context: 'general' | 'beta' | 'betaHat' 
     }
   }
   
-  // General chat
+  // General chat with timeline awareness
   const ageDialogue = DIALOGUE[age];
-  const allMessages = [...ageDialogue.greetings, ...ageDialogue.general, ...ageDialogue.questions];
+  const baseMessages = [...ageDialogue.greetings, ...ageDialogue.general, ...ageDialogue.questions];
+  
+  // Add timeline-specific messages
+  const version = bot.server.settings.version;
+  const timelineMessages = getTimelineDialogue(version, age);
+  const eventMessages = getEventDialogue(version, age);
+  
+  // Add non-member dialogue if applicable
+  const nonMemberMessages: string[] = [];
+  if (behavior.isNonMember && Math.random() < 0.3) {
+    const nmDialogue = DIALOGUE.nonMember[age];
+    if (nmDialogue) {
+      nonMemberMessages.push(...nmDialogue);
+    }
+  }
+  
+  const allMessages = [...baseMessages, ...timelineMessages, ...eventMessages, ...nonMemberMessages];
   return allMessages[randomInt(0, allMessages.length - 1)];
 }
 

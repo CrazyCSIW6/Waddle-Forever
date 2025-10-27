@@ -32,7 +32,35 @@ const PLAYER_NAMES = [
 // Launch penguin palette only to avoid colour issues with older clients
 const PENGUIN_COLORS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
-type BotPersonality = 'dancer' | 'wanderer';
+type BotPersonality = 'dancer' | 'wanderer' | 'snowball_fighter' | 'annoying' | 'explorer' | 'socializer' | 'sitter' | 'follower' | 'jokester' | 'speedster' | 'shy' | 'show_off';
+
+// Room IDs for reference
+const ROOM_IDS = {
+  TOWN: 100,
+  COFFEE_SHOP: 110,
+  DANCE_CLUB: 120,
+  SNOW_FORTS: 801,
+  PLAZA: 300,
+  PET_SHOP: 310,
+  PIZZA_PARLOR: 330,
+  DOCK: 800,
+  BEACH: 400,
+  LIGHTHOUSE: 410,
+  SKI_VILLAGE: 200,
+  SKI_LODGE: 220,
+  ICE_RINK: 802
+};
+
+// Track bot behaviors
+type BotAge = 'child' | 'preteen' | 'teen' | 'adult';
+const botBehaviors = new Map<Client, { 
+  personality: BotPersonality, 
+  age: BotAge,
+  target?: Client, 
+  intervals: NodeJS.Timeout[],
+  hasBetaHat?: boolean,
+  lastChatTime?: number
+}>();
 
 // Catalog items organized by release date
 type CatalogItem = {
@@ -290,6 +318,45 @@ function getTargetBotCount(serverPopulation: number): number {
 }
 
 /**
+ * Choose a personality for a bot based on room and chance
+ */
+function chooseBotPersonality(room: any): BotPersonality {
+  const roomId = room.id;
+  const rand = Math.random();
+  
+  // Room-specific personalities
+  if (roomId === ROOM_IDS.DANCE_CLUB) {
+    // 80% dancers in Dance Club
+    return rand < 0.8 ? 'dancer' : 'socializer';
+  } else if (roomId === ROOM_IDS.SNOW_FORTS) {
+    // 50% snowball fighters in Snow Forts
+    if (rand < 0.5) return 'snowball_fighter';
+    if (rand < 0.7) return 'wanderer';
+    return 'speedster';
+  } else if (roomId === ROOM_IDS.COFFEE_SHOP || roomId === ROOM_IDS.PIZZA_PARLOR) {
+    // More sitters in food places
+    if (rand < 0.4) return 'sitter';
+    if (rand < 0.7) return 'socializer';
+    return 'wanderer';
+  } else if (roomId === ROOM_IDS.PET_SHOP) {
+    // More show-offs in Pet Shop (showing off puffles)
+    if (rand < 0.2) return 'show_off';
+    return 'wanderer';
+  }
+  
+  // General personality distribution
+  if (rand < 0.05) return 'annoying';  // 5% annoying bots
+  if (rand < 0.10) return 'shy';       // 5% shy bots
+  if (rand < 0.15) return 'speedster'; // 5% speedsters
+  if (rand < 0.20) return 'follower';  // 5% followers
+  if (rand < 0.25) return 'jokester';  // 5% jokesters
+  if (rand < 0.35) return 'explorer';  // 10% explorers
+  if (rand < 0.50) return 'socializer'; // 15% socializers
+  if (rand < 0.70) return 'wanderer';  // 20% wanderers
+  return 'sitter'; // 30% sitters
+}
+
+/**
  * Spawn a single bot in a room
  */
 function spawnSingleBot(room: any, serverPopulation: number) {
@@ -315,34 +382,76 @@ function spawnSingleBot(room: any, serverPopulation: number) {
   if (clothing.feet) bot.penguin.feet = clothing.feet;
   if (clothing.pin) bot.penguin.pin = clothing.pin;
 
-  const isDanceClub = room.id === 120;
-  const danceChance = isDanceClub ? 0.8 : 0.5;
-  const personality: BotPersonality = Math.random() < danceChance ? 'dancer' : 'wanderer';
+  const personality = chooseBotPersonality(room);
+  
+  // Assign age (weighted towards younger players in 2005)
+  const ageRoll = Math.random();
+  let age: BotAge;
+  if (ageRoll < 0.35) age = 'child'; // 8-11 years old
+  else if (ageRoll < 0.55) age = 'preteen'; // 12-13 years old
+  else if (ageRoll < 0.80) age = 'teen'; // 14-17 years old
+  else age = 'adult'; // 18+ years old
+  
+  // Check if bot has party hat (beta tester)
+  const hasBetaHat = bot.penguin.head === 1;
 
   const { x, y } = pickSpawnCoordinates(room, bot);
   bot.setPosition(x, y);
   broadcastBotAppearance(room, bot, x, y);
 
-  if (personality === 'dancer') {
-    const danceX = randomInt(300, 500);
-    const danceY = randomInt(200, 400);
-    bot.setPosition(danceX, danceY);
-    bot.setFrame(26);
-  } else {
-    const walkInterval = setInterval(() => {
-      if (bot.room === room) {
-        const newX = randomInt(100, 700);
-        const newY = randomInt(100, 500);
-        bot.setPosition(newX, newY);
-      } else {
-        clearInterval(walkInterval);
-      }
-    }, randomInt(3000, 8000));
+  // Initialize bot behavior tracking
+  const intervals: NodeJS.Timeout[] = [];
+  botBehaviors.set(bot, { personality, age, intervals, hasBetaHat, lastChatTime: 0 });
+
+  // Apply personality-specific behavior
+  switch (personality) {
+    case 'dancer':
+      applyDancerBehavior(bot, room, intervals);
+      break;
+    case 'snowball_fighter':
+      applySnowballFighterBehavior(bot, room, intervals);
+      break;
+    case 'annoying':
+      applyAnnoyingBehavior(bot, room, intervals);
+      break;
+    case 'explorer':
+      applyExplorerBehavior(bot, room, intervals);
+      break;
+    case 'socializer':
+      applySocializerBehavior(bot, room, intervals);
+      break;
+    case 'sitter':
+      applySitterBehavior(bot, room, intervals);
+      break;
+    case 'follower':
+      applyFollowerBehavior(bot, room, intervals);
+      break;
+    case 'jokester':
+      applyJokesterBehavior(bot, room, intervals);
+      break;
+    case 'speedster':
+      applySpeedsterBehavior(bot, room, intervals);
+      break;
+    case 'shy':
+      applyShyBehavior(bot, room, intervals);
+      break;
+    case 'show_off':
+      applyShowOffBehavior(bot, room, intervals);
+      break;
+    case 'wanderer':
+    default:
+      applyWandererBehavior(bot, room, intervals);
+      break;
   }
 
+  // Apply chat behavior to all bots
+  applyChatBehavior(bot, room, intervals);
+  
+  // Common leave behavior for all bots
   const leaveInterval = setInterval(() => {
     if (bot.room === room) {
       if (Math.random() < 0.2) {
+        cleanupBotBehavior(bot);
         bot.leaveRoom();
         clearInterval(leaveInterval);
       }
@@ -350,6 +459,7 @@ function spawnSingleBot(room: any, serverPopulation: number) {
       clearInterval(leaveInterval);
     }
   }, randomInt(15000, 45000));
+  intervals.push(leaveInterval);
 }
 
 /**
@@ -482,6 +592,863 @@ function getAvailableBotName(room: any): string {
   return name;
 }
 
+// Chat dialogue pools
+const DIALOGUE = {
+  // General chat by age
+  child: {
+    greetings: ['hi', 'hello', 'hey', 'hi everyone', 'sup'],
+    general: ['this is fun', 'i like this game', 'wanna be friends?', 'cool', 'lol', 'haha', 'omg', 'wow'],
+    questions: ['what do you do here?', 'how do i get coins?', 'where is the pizza place?', 'wanna play?']
+  },
+  preteen: {
+    greetings: ['hey', 'hi', 'sup', 'whats up', 'yo'],
+    general: ['lol', 'cool', 'nice', 'awesome', 'this is cool', 'haha', 'rofl', 'lmao', 'brb'],
+    questions: ['wanna play card jitsu?', 'anyone wanna go to the ice berg?', 'how do i get more coins?']
+  },
+  teen: {
+    greetings: ['hey', 'hi', 'sup', 'whats up', 'hey guys'],
+    general: ['cool', 'nice', 'lol', 'haha', 'this game is actually pretty fun', 'interesting', 'whatever'],
+    questions: ['anyone else here from the forums?', 'is there a guide for this game?', 'what are you supposed to do here?']
+  },
+  adult: {
+    greetings: ['hello', 'hi', 'hey everyone', 'greetings'],
+    general: ['interesting game', 'this is quite charming', 'not bad', 'clever design', 'my kid likes this game'],
+    questions: ['is this game appropriate for children?', 'how does the membership work?', 'whats the goal of this game?']
+  },
+  
+  // Beta testing specific
+  beta: {
+    child: ['this is so cool', 'i love being a beta tester', 'i got to test this game!', 'im helping make the game!'],
+    preteen: ['this beta test is awesome', 'im testing the game', 'finding bugs is fun', 'beta testing rocks'],
+    teen: ['beta testing is pretty fun', 'finding bugs for the devs', 'this game has potential', 'glad i got into the beta'],
+    adult: ['interesting beta test', 'good to see the game developing', 'been testing since august', 'providing feedback to the team']
+  },
+  
+  // Party hat reactions (post Oct 24, 2005)
+  betaHat: {
+    child: ['BETA!!', 'OMG BETA TESTER', 'can i have coins pls', 'can u give me items', 'how did u get that hat', 'GIVE ME COINS'],
+    preteen: ['whoa beta hat', 'beta tester!', 'can i have some coins?', 'thats so rare', 'lucky'],
+    teen: ['nice beta hat', 'og beta tester', 'thats rare', 'cool hat'],
+    adult: ['ah a beta tester', 'nice to see an og player', 'you were here for the party']
+  },
+  
+  // Easter egg item reactions
+  easterEgg: {
+    child: ['whoa cool item', 'how did u get that?', 'i want that', 'where did u find that'],
+    preteen: ['thats cool', 'nice item', 'how did u get that', 'where is that from'],
+    teen: ['thats a rare item', 'never seen that before', 'how did you get that?', 'is that even in the catalog?'],
+    adult: ['interesting item', 'havent seen that before', 'unique piece']
+  },
+  
+  // Beta tester defending themselves
+  betaDefense: {
+    teen: ['give me some space', 'stop begging', 'i cant give you anything', 'leave me alone'],
+    adult: ['i dont have anything to give you', 'please stop following me', 'this is getting ridiculous']
+  },
+  
+  // Beta tester complaints
+  betaComplaint: [
+    'this game is unplayable because of these kids',
+    'cant even walk around without being swarmed',
+    'maybe i should take off my hat',
+    'this is why we cant have nice things',
+    'the beta party was so much better'
+  ],
+  
+  // Jokester beta lines
+  jokesterBeta: [
+    'lol im getting called a beta here too now',
+    'beta tester? more like be-a pest-er',
+    'i was beta testing before it was cool',
+    'my hat brings all the noobs to the yard'
+  ]
+};
+
+// Easter egg item IDs
+const EASTER_EGG_ITEMS = [452, 233]; // Viking Helmet, Red Electric Guitar
+
+/**
+ * Get a random chat message based on context
+ */
+function getBotChatMessage(bot: Client, context: 'general' | 'beta' | 'betaHat' | 'easterEgg' | 'betaDefense' | 'betaComplaint' | 'jokesterBeta', room: any): string | null {
+  const behavior = botBehaviors.get(bot);
+  if (!behavior) return null;
+  
+  const { age, personality } = behavior;
+  
+  // Context-specific messages
+  if (context === 'betaComplaint') {
+    return DIALOGUE.betaComplaint[randomInt(0, DIALOGUE.betaComplaint.length - 1)];
+  }
+  
+  if (context === 'jokesterBeta') {
+    return DIALOGUE.jokesterBeta[randomInt(0, DIALOGUE.jokesterBeta.length - 1)];
+  }
+  
+  if (context === 'betaDefense') {
+    if (age === 'teen' || age === 'adult') {
+      const messages = DIALOGUE.betaDefense[age];
+      return messages[randomInt(0, messages.length - 1)];
+    }
+    return null;
+  }
+  
+  if (context === 'beta' && behavior.hasBetaHat) {
+    const messages = DIALOGUE.beta[age as keyof typeof DIALOGUE.beta];
+    if (messages) {
+      return messages[randomInt(0, messages.length - 1)];
+    }
+  }
+  
+  if (context === 'betaHat') {
+    const messages = DIALOGUE.betaHat[age];
+    return messages[randomInt(0, messages.length - 1)];
+  }
+  
+  if (context === 'easterEgg') {
+    const messages = DIALOGUE.easterEgg[age as keyof typeof DIALOGUE.easterEgg];
+    if (messages) {
+      return messages[randomInt(0, messages.length - 1)];
+    }
+  }
+  
+  // General chat
+  const ageDialogue = DIALOGUE[age];
+  const allMessages = [...ageDialogue.greetings, ...ageDialogue.general, ...ageDialogue.questions];
+  return allMessages[randomInt(0, allMessages.length - 1)];
+}
+
+/**
+ * Make bot send a chat message
+ */
+function botSendChat(bot: Client, message: string) {
+  if (!bot.room) return;
+  bot.sendRoomXt('sm', bot.penguin.id, message);
+  const behavior = botBehaviors.get(bot);
+  if (behavior) {
+    behavior.lastChatTime = Date.now();
+  }
+}
+
+/**
+ * Check if any player has an easter egg item
+ */
+function detectEasterEggItems(room: any): Client | null {
+  const allPenguins = [...room.players, ...room.botGroup.bots];
+  for (const penguin of allPenguins) {
+    if (EASTER_EGG_ITEMS.includes(penguin.penguin.head) || 
+        EASTER_EGG_ITEMS.includes(penguin.penguin.hand)) {
+      return penguin;
+    }
+  }
+  return null;
+}
+
+/**
+ * Check if any player has party hat (after Oct 24, 2005)
+ */
+function detectBetaHat(room: any, currentDate: Date): Client | null {
+  const betaPartyEnd = new Date('2005-10-24');
+  if (currentDate <= betaPartyEnd) return null;
+  
+  const allPenguins = [...room.players, ...room.botGroup.bots];
+  for (const penguin of allPenguins) {
+    if (penguin.penguin.head === 1 && !penguin.isBot) { // Party hat
+      return penguin;
+    }
+  }
+  return null;
+}
+
+/**
+ * Apply chat behavior to bot based on personality and context
+ */
+function applyChatBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  const behavior = botBehaviors.get(bot);
+  if (!behavior) return;
+  
+  // Different chat frequencies based on personality
+  let minDelay = 15000;
+  let maxDelay = 45000;
+  
+  if (behavior.personality === 'socializer' || behavior.personality === 'jokester') {
+    minDelay = 10000;
+    maxDelay = 30000;
+  } else if (behavior.personality === 'shy' || behavior.personality === 'sitter') {
+    minDelay = 30000;
+    maxDelay = 90000;
+  }
+  
+  const chatInterval = setInterval(() => {
+    if (bot.room !== room) {
+      clearInterval(chatInterval);
+      return;
+    }
+    
+    const now = Date.now();
+    if (behavior.lastChatTime && now - behavior.lastChatTime < 10000) {
+      return; // Don't spam chat
+    }
+    
+    // Check for context-specific scenarios
+    const currentDate = new Date(); // In real implementation, get from server
+    
+    // Beta hat detection (swarm behavior)
+    const betaHatPlayer = detectBetaHat(room, currentDate);
+    if (betaHatPlayer && Math.random() < 0.3) {
+      // Young bots swarm beta testers
+      if (behavior.age === 'child' || behavior.age === 'preteen') {
+        const message = getBotChatMessage(bot, 'betaHat', room);
+        if (message) {
+          botSendChat(bot, message);
+          // Move towards beta tester
+          if (Math.random() < 0.6) {
+            setTimeout(() => {
+              if (bot.room === room && betaHatPlayer.room === room) {
+                const offsetX = randomInt(-100, 100);
+                const offsetY = randomInt(-100, 100);
+                bot.setPosition(betaHatPlayer.x + offsetX, betaHatPlayer.y + offsetY);
+              }
+            }, 500);
+          }
+        }
+        return;
+      }
+      
+      // Beta tester bots defend themselves or complain
+      if (behavior.hasBetaHat && (behavior.age === 'teen' || behavior.age === 'adult')) {
+        // Count how many kids are swarming
+        const nearbyKids = room.botGroup.bots.filter((b: Client) => {
+          const bBehavior = botBehaviors.get(b);
+          if (!bBehavior) return false;
+          if (bBehavior.age !== 'child' && bBehavior.age !== 'preteen') return false;
+          const distance = Math.sqrt(Math.pow(bot.x - b.x, 2) + Math.pow(bot.y - b.y, 2));
+          return distance < 150;
+        }).length;
+        
+        if (nearbyKids >= 2) {
+          // Defend or complain
+          if (Math.random() < 0.4) {
+            // Defend
+            const message = getBotChatMessage(bot, 'betaDefense', room);
+            if (message) {
+              botSendChat(bot, message);
+            }
+          } else if (Math.random() < 0.3) {
+            // Complain
+            if (behavior.personality === 'jokester') {
+              const message = getBotChatMessage(bot, 'jokesterBeta', room);
+              if (message) {
+                botSendChat(bot, message);
+              }
+            } else {
+              const message = getBotChatMessage(bot, 'betaComplaint', room);
+              if (message) {
+                botSendChat(bot, message);
+              }
+            }
+            
+            // Chance to take off hat or leave
+            if (nearbyKids >= 4 && Math.random() < 0.15) {
+              if (Math.random() < 0.6) {
+                // Take off party hat
+                bot.penguin.head = 0;
+                behavior.hasBetaHat = false;
+                // Broadcast update
+                bot.sendRoomXt('uph', bot.penguin.id, 0);
+                setTimeout(() => {
+                  botSendChat(bot, 'there happy now');
+                }, 1000);
+              } else {
+                // Leave room
+                botSendChat(bot, 'im out');
+                setTimeout(() => {
+                  if (bot.room === room) {
+                    bot.leaveRoom();
+                    cleanupBotBehavior(bot);
+                  }
+                }, 1500);
+              }
+            }
+          }
+        }
+        return;
+      }
+    }
+    
+    // Easter egg item detection
+    const easterEggPlayer = detectEasterEggItems(room);
+    if (easterEggPlayer && Math.random() < 0.15) {
+      const message = getBotChatMessage(bot, 'easterEgg', room);
+      if (message) {
+        botSendChat(bot, message);
+        return;
+      }
+    }
+    
+    // Beta tester specific chat
+    if (behavior.hasBetaHat && currentDate <= new Date('2005-10-24')) {
+      if (Math.random() < 0.2) {
+        const message = getBotChatMessage(bot, 'beta', room);
+        if (message) {
+          botSendChat(bot, message);
+          return;
+        }
+      }
+    }
+    
+    // General chat
+    if (Math.random() < 0.4) {
+      const message = getBotChatMessage(bot, 'general', room);
+      if (message) {
+        botSendChat(bot, message);
+      }
+    }
+  }, randomInt(minDelay, maxDelay));
+  
+  intervals.push(chatInterval);
+}
+
+// Personality behavior implementations
+function applyDancerBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  const danceX = randomInt(300, 500);
+  const danceY = randomInt(200, 400);
+  bot.setPosition(danceX, danceY);
+  bot.setFrame(26); // Dance frame - only animation we manually trigger
+}
+
+function applyWandererBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  const walkInterval = setInterval(() => {
+    if (bot.room === room) {
+      const newX = randomInt(100, 700);
+      const newY = randomInt(100, 500);
+      // Game handles walking animation automatically
+      bot.setPosition(newX, newY);
+    } else {
+      clearInterval(walkInterval);
+    }
+  }, randomInt(5000, 10000));
+  intervals.push(walkInterval);
+}
+
+function applySnowballFighterBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  // Aggressive snowball throwing behavior
+  let isMoving = false;
+  
+  const fightInterval = setInterval(() => {
+    if (bot.room === room) {
+      const players = room.players.filter((p: Client) => p !== bot);
+      const bots = room.botGroup.bots.filter((b: Client) => b !== bot);
+      const targets = [...players, ...bots];
+      
+      if (targets.length > 0) {
+        // Pick a target (prefer players and other snowball fighters)
+        let target = targets[randomInt(0, targets.length - 1)];
+        
+        // Prioritize players and other snowball fighters
+        const preferredTargets = targets.filter(t => {
+          if (!t.isBot) return true; // Real players
+          const b = botBehaviors.get(t);
+          return b && b.personality === 'snowball_fighter';
+        });
+        
+        if (preferredTargets.length > 0) {
+          const index = randomInt(0, preferredTargets.length - 1);
+          target = preferredTargets[index];
+        }
+        
+        // Throw snowball only if not currently moving - game handles animation
+        if (!isMoving && bot.room === room && target.room === room) {
+          bot.throwSnowball(String(target.x), String(target.y));
+          // Detect if the bot hit anyone
+          detectSnowballHit(room, target.x, target.y, bot);
+        }
+        
+        // Move towards target sometimes
+        if (Math.random() < 0.3) {
+          isMoving = true;
+          setTimeout(() => {
+            if (bot.room === room && target.room === room) {
+              const moveX = target.x + randomInt(-150, 150);
+              const moveY = target.y + randomInt(-150, 150);
+              bot.setPosition(Math.max(100, Math.min(700, moveX)), Math.max(100, Math.min(500, moveY)));
+            }
+            isMoving = false;
+          }, 500);
+        }
+      }
+    } else {
+      clearInterval(fightInterval);
+    }
+  }, randomInt(3000, 7000));
+  intervals.push(fightInterval);
+}
+
+function applyAnnoyingBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  // Block doorways and get in front of players
+  let currentTarget: Client | undefined = undefined;
+  let backedOff = false; // Track if bot has backed off due to player annoyance
+  let doubleDownMode = false; // Track if bot is doubling down on being annoying
+  
+  const annoyInterval = setInterval(() => {
+    if (bot.room === room) {
+      const players = room.players.filter((p: Client) => !p.isBot);
+      
+      // If backed off, stay away for a while
+      if (backedOff) {
+        if (Math.random() < 0.05) { // 5% chance per interval to start annoying again
+          backedOff = false;
+          currentTarget = undefined;
+        }
+        return;
+      }
+      
+      if (players.length > 0 && Math.random() < 0.7) {
+        // Pick a consistent target or choose a new one
+        if (!currentTarget || currentTarget.room !== room || Math.random() < 0.1) {
+          currentTarget = players[randomInt(0, players.length - 1)];
+          const behavior = botBehaviors.get(bot);
+          if (behavior) behavior.target = currentTarget;
+        }
+        
+        // Follow and block the target
+        if (currentTarget && currentTarget.room === room) {
+          if (doubleDownMode) {
+            // Extra annoying - get right on top of them
+            bot.setPosition(currentTarget.x, currentTarget.y);
+          } else {
+            // Normal annoying - stay close
+            const offsetX = randomInt(-50, 50);
+            const offsetY = randomInt(-50, 50);
+            bot.setPosition(currentTarget.x + offsetX, currentTarget.y + offsetY);
+          }
+        }
+      } else {
+        // Block common entrances (these are typical door positions)
+        const doorways = [
+          { x: 400, y: 100 }, // Top door
+          { x: 100, y: 300 }, // Left door
+          { x: 700, y: 300 }, // Right door
+          { x: 400, y: 500 }, // Bottom door
+        ];
+        const door = doorways[randomInt(0, doorways.length - 1)];
+        bot.setPosition(door.x, door.y);
+      }
+    } else {
+      clearInterval(annoyInterval);
+    }
+  }, randomInt(3000, 6000));
+  intervals.push(annoyInterval);
+  
+  // Store functions in behavior data for external access
+  const behavior = botBehaviors.get(bot);
+  if (behavior) {
+    (behavior as any).backOff = () => {
+      backedOff = true;
+      doubleDownMode = false;
+      // Move away from target
+      if (currentTarget && bot.room === room) {
+        const awayX = bot.x + (bot.x - currentTarget.x) * 2;
+        const awayY = bot.y + (bot.y - currentTarget.y) * 2;
+        bot.setPosition(
+          Math.max(100, Math.min(700, awayX)),
+          Math.max(100, Math.min(500, awayY))
+        );
+      }
+    };
+    (behavior as any).doubleDown = () => {
+      doubleDownMode = true;
+      backedOff = false;
+    };
+  }
+}
+
+function applyExplorerBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  // Move around the room systematically
+  let explorationIndex = 0;
+  const explorationPoints = [
+    { x: 150, y: 150 }, { x: 650, y: 150 },
+    { x: 650, y: 450 }, { x: 150, y: 450 },
+    { x: 400, y: 300 }
+  ];
+  
+  const exploreInterval = setInterval(() => {
+    if (bot.room === room) {
+      const point = explorationPoints[explorationIndex % explorationPoints.length];
+      // Game handles walking animation automatically
+      bot.setPosition(point.x, point.y);
+      explorationIndex++;
+    } else {
+      clearInterval(exploreInterval);
+    }
+  }, randomInt(5000, 9000));
+  intervals.push(exploreInterval);
+}
+
+function applySocializerBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  // Move towards other penguins to socialize and wave
+  const socialInterval = setInterval(() => {
+    if (bot.room === room) {
+      // Move towards other penguins
+      const others = [...room.players, ...room.botGroup.bots].filter((p: Client) => p !== bot);
+      if (others.length > 0 && Math.random() < 0.5) {
+        const target = others[randomInt(0, others.length - 1)];
+        const moveX = target.x + randomInt(-150, 150);
+        const moveY = target.y + randomInt(-150, 150);
+        bot.setPosition(Math.max(100, Math.min(700, moveX)), Math.max(100, Math.min(500, moveY)));
+      }
+      
+      // Wave at others sometimes
+      if (Math.random() < 0.4) {
+        bot.setFrame(25); // Wave
+        setTimeout(() => {
+          if (bot.room === room) bot.setFrame(1);
+        }, 2000);
+      }
+    } else {
+      clearInterval(socialInterval);
+    }
+  }, randomInt(5000, 10000));
+  intervals.push(socialInterval);
+}
+
+function applySitterBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  // Find a spot and sit facing a random direction
+  const sitX = randomInt(200, 600);
+  const sitY = randomInt(200, 400);
+  bot.setPosition(sitX, sitY);
+  
+  // Sit facing a random direction (frames 17-24)
+  const sitDirections = [17, 18, 19, 20, 21, 22, 23, 24];
+  const sitFrame = sitDirections[randomInt(0, sitDirections.length - 1)];
+  bot.setFrame(sitFrame);
+  
+  // Occasionally change sitting direction
+  const sitInterval = setInterval(() => {
+    if (bot.room === room) {
+      if (Math.random() < 0.15) {
+        const newSitFrame = sitDirections[randomInt(0, sitDirections.length - 1)];
+        bot.setFrame(newSitFrame);
+      }
+    } else {
+      clearInterval(sitInterval);
+    }
+  }, randomInt(10000, 20000));
+  intervals.push(sitInterval);
+}
+
+function applyFollowerBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  // Pick a target to follow
+  let target: Client | undefined = undefined;
+  
+  const followInterval = setInterval(() => {
+    if (bot.room === room) {
+      // Pick a new target if we don't have one
+      if (!target || target.room !== room) {
+        const candidates = room.players.filter((p: Client) => !p.isBot);
+        if (candidates.length > 0) {
+          target = candidates[randomInt(0, candidates.length - 1)];
+          const behavior = botBehaviors.get(bot);
+          if (behavior) behavior.target = target;
+        }
+      }
+      
+      // Follow the target
+      if (target && target.room === room) {
+        const offsetX = randomInt(-100, 100);
+        const offsetY = randomInt(-100, 100);
+        bot.setPosition(
+          Math.max(100, Math.min(700, target.x + offsetX)),
+          Math.max(100, Math.min(500, target.y + offsetY))
+        );
+      }
+    } else {
+      clearInterval(followInterval);
+    }
+  }, randomInt(1000, 3000));
+  intervals.push(followInterval);
+}
+
+function applyJokesterBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  // Move around to "perform" and do funny actions
+  const jokeInterval = setInterval(() => {
+    if (bot.room === room) {
+      // Move around to perform
+      if (Math.random() < 0.7) {
+        bot.setPosition(randomInt(200, 600), randomInt(200, 400));
+      }
+      
+      // Do funny actions (wave or dance)
+      if (Math.random() < 0.5) {
+        const funnyActions = [25, 26]; // Wave, dance
+        const action = funnyActions[randomInt(0, funnyActions.length - 1)];
+        bot.setFrame(action);
+        setTimeout(() => {
+          if (bot.room === room) bot.setFrame(1);
+        }, 2500);
+      }
+    } else {
+      clearInterval(jokeInterval);
+    }
+  }, randomInt(4000, 8000));
+  intervals.push(jokeInterval);
+}
+
+function applySpeedsterBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  // Move very quickly between positions
+  const speedInterval = setInterval(() => {
+    if (bot.room === room) {
+      // Rapid movement - game handles animation
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+          if (bot.room === room) {
+            const x = randomInt(100, 700);
+            const y = randomInt(100, 500);
+            bot.setPosition(x, y);
+          }
+        }, i * 800);
+      }
+    } else {
+      clearInterval(speedInterval);
+    }
+  }, randomInt(3000, 6000));
+  intervals.push(speedInterval);
+}
+
+function applyShyBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  // Move away from other penguins
+  const shyInterval = setInterval(() => {
+    if (bot.room === room) {
+      const others = [...room.players, ...room.botGroup.bots].filter((p: Client) => p !== bot);
+      
+      if (others.length > 0) {
+        // Find the closest penguin
+        let closest = others[0];
+        let minDist = Math.sqrt(Math.pow(bot.x - closest.x, 2) + Math.pow(bot.y - closest.y, 2));
+        
+        for (const other of others) {
+          const dist = Math.sqrt(Math.pow(bot.x - other.x, 2) + Math.pow(bot.y - other.y, 2));
+          if (dist < minDist) {
+            minDist = dist;
+            closest = other;
+          }
+        }
+        
+        // Run away if too close - game handles animation
+        if (minDist < 200) {
+          const awayX = bot.x + (bot.x - closest.x) * 2;
+          const awayY = bot.y + (bot.y - closest.y) * 2;
+          bot.setPosition(
+            Math.max(100, Math.min(700, awayX)),
+            Math.max(100, Math.min(500, awayY))
+          );
+        }
+      }
+    } else {
+      clearInterval(shyInterval);
+    }
+  }, randomInt(1000, 2000));
+  intervals.push(shyInterval);
+}
+
+function applyShowOffBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  // Move to center stage to show off and perform
+  const showInterval = setInterval(() => {
+    if (bot.room === room) {
+      // Move to center stage
+      if (Math.random() < 0.5) {
+        bot.setPosition(randomInt(350, 450), randomInt(250, 350));
+      }
+      
+      // Show off with wave or dance
+      if (Math.random() < 0.6) {
+        const showOffActions = [25, 26]; // Wave, dance
+        const action = showOffActions[randomInt(0, showOffActions.length - 1)];
+        bot.setFrame(action);
+        setTimeout(() => {
+          if (bot.room === room) bot.setFrame(1);
+        }, 3000);
+      }
+    } else {
+      clearInterval(showInterval);
+    }
+  }, randomInt(3000, 7000));
+  intervals.push(showInterval);
+}
+
+function cleanupBotBehavior(bot: Client) {
+  const behavior = botBehaviors.get(bot);
+  if (behavior) {
+    // Clear all intervals
+    behavior.intervals.forEach(interval => clearInterval(interval));
+    botBehaviors.delete(bot);
+  }
+}
+
+/**
+ * Check if a message contains annoyed phrases
+ */
+function isAnnoyedMessage(message: string): boolean {
+  const annoyedPhrases = [
+    'piss off', 'fuck off', 'go away', 'leave me alone', 'stop it',
+    'stop following', 'stop', 'annoying', 'get away', 'leave',
+    'move', 'gtfo', 'stfu', 'shut up', 'bugger off', 'screw off',
+    'quit it', 'knock it off', 'cut it out'
+  ];
+  
+  const lowerMessage = message.toLowerCase();
+  return annoyedPhrases.some(phrase => lowerMessage.includes(phrase));
+}
+
+/**
+ * Check if a message is super vulgar/aggressive
+ */
+function isSuperVulgar(message: string): boolean {
+  const superVulgarPhrases = [
+    'kill yourself', 'kys', 'fuck off cunt', 'fucking cunt',
+    'fuck you cunt', 'kill urself', 'die', 'fucking kill',
+    'fuck off bitch', 'fucking bitch', 'cunt', 'fucking die',
+    'nigger', 'faggot', 'spick', 'chink', 'cum', 'rape', 'rapist',
+    'pedo', 'molest'
+  ];
+  
+  const lowerMessage = message.toLowerCase();
+  return superVulgarPhrases.some(phrase => lowerMessage.includes(phrase));
+}
+
+/**
+ * Handle annoying bot reaction to player annoyance
+ */
+function handleAnnoyingBotReaction(player: Client, message: string) {
+  if (!player.room) return;
+  
+  const isVeryAngry = isSuperVulgar(message);
+  
+  // Find any annoying bots targeting this player
+  player.room.botGroup.bots.forEach((bot: Client) => {
+    const behavior = botBehaviors.get(bot);
+    if (behavior && behavior.personality === 'annoying' && behavior.target === player) {
+      // Always back off if player is super vulgar
+      if (isVeryAngry) {
+        if ((behavior as any).backOff) {
+          (behavior as any).backOff();
+        }
+      } else {
+        // 60% chance to back off, 40% chance to double down for normal annoyance
+        if (Math.random() < 0.6) {
+          // Back off
+          if ((behavior as any).backOff) {
+            (behavior as any).backOff();
+          }
+        } else {
+          // Double down and get more annoying
+          if ((behavior as any).doubleDown) {
+            (behavior as any).doubleDown();
+          }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Detect if a snowball hit any bots and have them react
+ */
+function detectSnowballHit(room: any, targetX: number, targetY: number, thrower: Client) {
+  const hitRadius = 100; // Distance within which a bot is considered "hit"
+  
+  room.botGroup.bots.forEach((bot: Client) => {
+    const distance = Math.sqrt(Math.pow(bot.x - targetX, 2) + Math.pow(bot.y - targetY, 2));
+    
+    if (distance < hitRadius) {
+      // Bot was hit! Make them react
+      const behavior = botBehaviors.get(bot);
+      
+      if (behavior) {
+        switch (behavior.personality) {
+          case 'snowball_fighter':
+            // Snowball fighters throw back immediately
+            if (!thrower.isBot && thrower.room === room) {
+              setTimeout(() => {
+                if (bot.room === room && thrower.room === room) {
+                  bot.throwSnowball(String(thrower.x), String(thrower.y));
+                  // Detect if the counter-attack hit anyone
+                  detectSnowballHit(room, thrower.x, thrower.y, bot);
+                }
+              }, randomInt(500, 1500));
+            }
+            break;
+            
+          case 'shy':
+            // Shy bots run away when hit
+            const awayX = bot.x + (bot.x - targetX) * 3;
+            const awayY = bot.y + (bot.y - targetY) * 3;
+            setTimeout(() => {
+              if (bot.room === room) {
+                bot.setPosition(
+                  Math.max(100, Math.min(700, awayX)),
+                  Math.max(100, Math.min(500, awayY))
+                );
+              }
+            }, randomInt(200, 500));
+            break;
+            
+          case 'annoying':
+            // Annoying bots move towards the thrower
+            if (!thrower.isBot && thrower.room === room) {
+              setTimeout(() => {
+                if (bot.room === room && thrower.room === room) {
+                  bot.setPosition(thrower.x, thrower.y);
+                }
+              }, randomInt(300, 800));
+            }
+            break;
+            
+          case 'jokester':
+            // Jokesters dance when hit
+            setTimeout(() => {
+              if (bot.room === room) {
+                bot.setFrame(26); // Dance
+                setTimeout(() => {
+                  if (bot.room === room) bot.setFrame(1);
+                }, 2000);
+              }
+            }, randomInt(200, 600));
+            break;
+            
+          case 'wanderer':
+          case 'explorer':
+          case 'speedster':
+            // These bots move to a random new position when hit
+            setTimeout(() => {
+              if (bot.room === room) {
+                bot.setPosition(randomInt(100, 700), randomInt(100, 500));
+              }
+            }, randomInt(300, 700));
+            break;
+            
+          // Socializers, sitters, followers, dancers, show-offs don't react much
+          default:
+            // Just a small random movement
+            if (Math.random() < 0.3) {
+              setTimeout(() => {
+                if (bot.room === room) {
+                  const newX = bot.x + randomInt(-50, 50);
+                  const newY = bot.y + randomInt(-50, 50);
+                  bot.setPosition(
+                    Math.max(100, Math.min(700, newX)),
+                    Math.max(100, Math.min(500, newY))
+                  );
+                }
+              }, randomInt(200, 500));
+            }
+            break;
+        }
+      }
+    }
+  });
+}
+
 function resetAllRoomBots(server: any) {
   const activeRooms = Array.from(roomsWithBots);
 
@@ -547,6 +1514,11 @@ handler.xt(Handle.GetInventoryOld, (client) => {
 
 handler.xt(Handle.SendMessageOld, (client, id, message) => {
   client.sendMessage(message);
+  
+  // Check if player is expressing annoyance at bots
+  if (isAnnoyedMessage(message)) {
+    handleAnnoyingBotReaction(client, message);
+  }
 });
 
 handler.xt(Handle.SendMessageOld, commandsHandler);
@@ -559,8 +1531,13 @@ handler.xt(Handle.SendEmoteOld, (client, emote) => {
   client.sendEmote(emote);
 });
 
-handler.xt(Handle.SnowballOld, (client, ...args) => {
-  client.throwSnowball(...args);
+handler.xt(Handle.SnowballOld, (client, x: string, y: string) => {
+  client.throwSnowball(x, y);
+  
+  // Detect if any bots are hit by the snowball
+  if (client.room) {
+    detectSnowballHit(client.room, parseInt(x), parseInt(y), client);
+  }
 })
 
 handler.xt(Handle.SendJokeOld, (client, joke) => {

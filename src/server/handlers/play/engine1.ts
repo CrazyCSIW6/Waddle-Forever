@@ -406,7 +406,7 @@ function spawnSingleBot(room: any, serverPopulation: number) {
   }
   
   // Check if bot has party hat (beta tester)
-  const hasBetaHat = !isNonMember && bot.penguin.head === 1;
+  const hasBetaHat = !isNonMember && bot.penguin.head === 413;
 
   const { x, y } = pickSpawnCoordinates(room, bot);
   bot.setPosition(x, y);
@@ -459,6 +459,11 @@ function spawnSingleBot(room: any, serverPopulation: number) {
 
   // Apply chat behavior to all bots
   applyChatBehavior(bot, room, intervals);
+  
+  // Kids and preteens are OBSESSED with party hats (beta testers)
+  if ((age === 'child' || age === 'preteen') && !hasBetaHat) {
+    applyPartyHatAttractionBehavior(bot, room, intervals, age);
+  }
   
   // Common leave behavior for all bots
   const leaveInterval = setInterval(() => {
@@ -874,6 +879,32 @@ const DIALOGUE = {
     adult: [
       'not purchasing membership', 'staying free to play', 'testing before buying membership',
       'evaluating if membership is worth it', 'free account for now'
+    ]
+  },
+  
+  // Snowball hit reactions
+  snowballHit: {
+    child: [
+      'HEY', 'STOP IT', 'that hurt', 'why did you do that', 'stop throwing snowballs',
+      'ur mean', 'thats not nice', 'dont throw at me', 'i didnt do anything',
+      'stop', 'cut it out', 'leave me alone'
+    ],
+    preteen: [
+      'wtf', 'the fuck', 'bro what', 'bruh', 'really', 'seriously',
+      'what was that for', 'the fuck did i do', 'why', 'random much',
+      'ok then', 'alright then', 'ur gonna regret that', 'wanna fight',
+      'come at me', 'is that all you got'
+    ],
+    teen: [
+      'bro fuck off', 'fuck off', 'the fuck did i do', 'what the fuck',
+      'ur retarded', 'retard', 'alr then lets fight', 'wanna go',
+      'really dude', 'thats how it is', 'ok asshole', 'nice one dipshit',
+      'watch it', 'you asked for it', 'bring it'
+    ],
+    adult: [
+      'really', 'was that necessary', 'very mature', 'grow up',
+      'thats childish', 'please dont', 'come on now', 'not funny',
+      'stop that', 'inappropriate', 'thats enough'
     ]
   }
 };
@@ -1315,7 +1346,7 @@ function detectBetaHat(room: any, currentDate: Date): Client | null {
   
   const allPenguins = [...room.players, ...room.botGroup.bots];
   for (const penguin of allPenguins) {
-    if (penguin.penguin.head === 1 && !penguin.isBot) { // Party hat
+    if (penguin.penguin.head === 413 && !penguin.isBot) { // Party hat
       return penguin;
     }
   }
@@ -1731,6 +1762,68 @@ function applyFollowerBehavior(bot: Client, room: any, intervals: NodeJS.Timeout
   intervals.push(followInterval);
 }
 
+/**
+ * Party Hat Attraction Behavior - Kids/preteens DROP EVERYTHING to swarm beta testers
+ * This overrides all other behaviors when a party hat is spotted
+ */
+function applyPartyHatAttractionBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[], age: BotAge) {
+  const attractionInterval = setInterval(() => {
+    if (bot.room !== room) {
+      clearInterval(attractionInterval);
+      return;
+    }
+    
+    // Find ANY player or bot with a party hat (head item ID 413)
+    const partyHatWearers = room.players.filter((p: Client) => p.penguin.head === 413);
+    
+    if (partyHatWearers.length > 0) {
+      // Pick the closest party hat wearer
+      let closestTarget: Client | null = null;
+      let closestDistance = Infinity;
+      
+      for (const target of partyHatWearers) {
+        const distance = Math.sqrt(
+          Math.pow(target.x - bot.x, 2) + Math.pow(target.y - bot.y, 2)
+        );
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestTarget = target;
+        }
+      }
+      
+      if (closestTarget) {
+        // IMMEDIATELY move towards the party hat wearer
+        // Kids get VERY close (50-80 pixels), preteens slightly less close (80-120 pixels)
+        const minDistance = age === 'child' ? 50 : 80;
+        const maxDistance = age === 'child' ? 80 : 120;
+        
+        if (closestDistance > maxDistance) {
+          // Move closer with some randomness
+          const angle = Math.atan2(closestTarget.y - bot.y, closestTarget.x - bot.x);
+          const targetDistance = randomInt(minDistance, maxDistance);
+          const newX = closestTarget.x - Math.cos(angle) * targetDistance + randomInt(-20, 20);
+          const newY = closestTarget.y - Math.sin(angle) * targetDistance + randomInt(-20, 20);
+          
+          bot.setPosition(
+            Math.max(100, Math.min(700, newX)),
+            Math.max(100, Math.min(500, newY))
+          );
+        }
+        
+        // Spam beta hat chat when close
+        if (closestDistance < 150 && Math.random() < 0.4) {
+          const message = getBotChatMessage(bot, 'betaHat', room);
+          if (message) {
+            botSendChat(bot, message);
+          }
+        }
+      }
+    }
+  }, 1500); // Check frequently (every 1.5 seconds)
+  
+  intervals.push(attractionInterval);
+}
+
 function applyJokesterBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
   // Move around to "perform" and do funny actions
   const jokeInterval = setInterval(() => {
@@ -1927,6 +2020,19 @@ function detectSnowballHit(room: any, targetX: number, targetY: number, thrower:
       const behavior = botBehaviors.get(bot);
       
       if (behavior) {
+        // Chat reaction to being hit (70% chance)
+        if (Math.random() < 0.7) {
+          const reactions = DIALOGUE.snowballHit[behavior.age];
+          if (reactions) {
+            const reaction = reactions[randomInt(0, reactions.length - 1)];
+            setTimeout(() => {
+              if (bot.room === room) {
+                botSendChat(bot, reaction);
+              }
+            }, randomInt(200, 800));
+          }
+        }
+        
         switch (behavior.personality) {
           case 'snowball_fighter':
             // Snowball fighters throw back immediately
@@ -1991,8 +2097,15 @@ function detectSnowballHit(room: any, targetX: number, targetY: number, thrower:
             
           // Socializers, sitters, followers, dancers, show-offs don't react much
           default:
-            // Just a small random movement
-            if (Math.random() < 0.3) {
+            // Might throw back occasionally (30% chance) or just move
+            if (Math.random() < 0.3 && !thrower.isBot && thrower.room === room) {
+              setTimeout(() => {
+                if (bot.room === room && thrower.room === room) {
+                  bot.throwSnowball(String(thrower.x), String(thrower.y));
+                }
+              }, randomInt(1000, 2500));
+            } else if (Math.random() < 0.3) {
+              // Just a small random movement
               setTimeout(() => {
                 if (bot.room === room) {
                   const newX = bot.x + randomInt(-50, 50);

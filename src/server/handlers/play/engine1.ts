@@ -619,21 +619,22 @@ const DIALOGUE = {
       'helo', 'hai', 'yo', 'hiya', 'greetings', 'hi everybody', 'wave'
     ],
     general: [
-      'this is fun', 'i like this game', 'wanna be friends?', 'cool', 'lol', 'haha', 'omg', 'wow',
-      'this is awesome', 'yay', 'woohoo', 'weee', 'im having fun', 'this place is cool',
-      'look at me', 'watch this', 'im a penguin', 'penguins are cool', 'im blue', 'im red',
-      'i love snow', 'lets play', 'this is the best', 'so cool', 'amazing', 'awesome game',
-      'my mom said i can play for 30 minutes', 'my brother showed me this game', 
-      'im only 8', 'im 9 years old', 'this is my first time', 'i just joined',
-      'where is everyone', 'come here', 'follow me', 'wait for me', 'dont leave',
-      'im bored', 'what now', 'this is boring', 'nvm this is fun again'
+      'THIS IS SO FUN', 'i love this game so much', 'wanna be friends??', 'COOL', 'lol!!!', 'hahaha', 'OMG', 'WOW',
+      'this is awesome!!!', 'YAYYYY', 'woohoo!!!', 'wheee', 'im having so much fun', 'this place is so cool',
+      'LOOK AT ME', 'WATCH THIS', 'im a penguin :D', 'penguins are the best', 'i picked blue', 'red is my favorite',
+      'i LOVE snow', 'lets play something', 'this is the BEST game ever', 'SO COOL', 'AMAZING', 'best game ever',
+      'my mom said i can only play for 30 minutes :(', 'my big brother showed me this', 
+      'im 8', 'im 9', 'first time playing', 'i just started',
+      'where did everyone go', 'come back', 'follow me!!!', 'wait for me!!!', 'dont leave me',
+      'im bored now', 'what should we do', 'ok nvm this is fun again'
     ],
     questions: [
-      'what do you do here?', 'how do i get coins?', 'where is the pizza place?', 'wanna play?',
-      'can we be friends?', 'whats your name?', 'how old are you?', 'where are you from?',
-      'is this game free?', 'do i need to pay?', 'can i change my color?',
-      'where do i buy clothes?', 'can you show me around?', 'what room is this?', 'how do i leave?',
-      'how do i dance?', 'where did you get that?', 'can i have that?', 'will you give me coins?'
+      'what do you do in this game??', 'how do i get coins??', 'wheres the pizza place?', 'wanna play something??',
+      'can we be friends??', 'whats your name??', 'how old are you??', 'where are you from??',
+      'can i change my color??', 'how do you change color??',
+      'where do i buy clothes??', 'can you show me around??', 'what room is this??', 'how do i get out of here??',
+      'how do you dance??', 'where did you get that??', 'can i have that??', 'will you give me coins pls??',
+      'who made this game??', 'who made this??', 'whos the owner??'
     ]
   },
   preteen: {
@@ -642,21 +643,21 @@ const DIALOGUE = {
       'sup everyone', 'hey there', 'hi all', 'ayy', 'yoo', 'hey yall'
     ],
     general: [
-      'lol', 'cool', 'nice', 'awesome', 'this is cool', 'haha', 'rofl', 'lmao', 'brb',
-      'gtg', 'bbl', 'back', 'im back', 'anyone here', 'anyone online',
-      'this game is fun', 'bored', 'what to do', 'lmao this is funny',
-      'rofl', 'kek', 'omg', 'wtf', 'lolol', 'hahaha', 'XD', 'xD',
-      'getting coins', 'saving up', 'buying stuff soon', 'need more coins',
-      'anyone wanna hang out', 'im 12', 'im 13', 'middle school gang',
-      'school was boring today', 'homework sucks', 'cant wait for weekend',
-      'my parents let me play after homework', 'dinner time soon', 'gotta go soon'
+      'lol', 'thats cool', 'nice', 'awesome', 'this is actually cool', 'haha', 'rofl', 'lmao', 'brb',
+      'gtg', 'bbl', 'back', 'im back', 'anyone here?', 'is anyone online',
+      'this game is pretty fun', 'im bored', 'what should we do', 'lmao this is funny',
+      'rofl thats hilarious', 'kek', 'omg', 'wtf lol', 'lololol', 'hahahaha', 'XD', 'xD',
+      'grinding for coins', 'saving up for something', 'gonna buy stuff soon', 'i need more coins',
+      'anyone wanna hang', 'im 12 btw', 'im 13', 'any other middle schoolers',
+      'school was so boring today', 'homework sucks so bad', 'cant wait for the weekend',
+      'parents make me do homework first', 'gotta go to dinner soon', 'parents calling me'
     ],
     questions: [
-      'how do i get more coins?', 'whats the fastest way to get coins?', 'where can i buy stuff?', 
-      'anyone got membership?', 'is membership worth it?', 'how much does membership cost?', 
-      'anyone know any cheats?', 'are there any secrets?',
-      'wanna add me?', 'can we be buddies?',
-      'how do i change rooms?', 'where should i go?', 'whats fun to do?'
+      'how do i get more coins?', 'whats the fastest way to get coins?', 'where do i buy stuff?', 
+      'does anyone have membership?', 'is membership actually worth it?', 'how much is membership?', 
+      'anyone know any cheats lol?', 'are there any secret rooms?',
+      'wanna add me as a friend?', 'be buddies?',
+      'how do i go to different rooms?', 'where should i go?', 'whats actually fun to do here?'
     ]
   },
   teen: {
@@ -665,15 +666,15 @@ const DIALOGUE = {
       'sup yall', 'evening', 'afternoon', 'morning', 'hey everyone'
     ],
     general: [
-      'cool', 'nice', 'lol', 'haha', 'this game is actually pretty fun', 'interesting', 'whatever',
-      'not bad', 'decent game', 'surprisingly good', 'kinda addicting ngl',
-      'bored so im here', 'killing time', 'procrastinating homework', 
-      'should be studying', 'exam tomorrow but here i am', 'just chilling',
-      'been playing this for a while now', 'found this on a forum', 'saw this online',
-      'my younger sibling plays this', 'babysitting and got curious',
-      'this is weirdly relaxing', 'good way to destress', 'better than myspace',
-      'anyone else in high school?', 'junior year here', 'senior here',
-      'applying to colleges soon', 'SATs are brutal', 'this beats studying'
+      'actually pretty cool', 'not gonna lie this is fun', 'lol', 'haha', 'this game is actually fun', 'interesting concept', 'whatever',
+      'not bad at all', 'decent', 'surprisingly good game', 'kinda addicting not gonna lie',
+      'bored as hell so here i am', 'just killing time', 'procrastinating on homework', 
+      'i should be studying right now', 'got an exam tomorrow lol', 'just chilling',
+      'been playing for a while', 'found this on some forum', 'saw someone mention this',
+      'my little sister plays this', 'babysitting and decided to try it',
+      'this is actually relaxing', 'good way to zone out', 'beats scrolling myspace',
+      'any high schoolers here?', 'junior here', 'senior year',
+      'college apps are killing me', 'SATs were brutal', 'anything to avoid studying'
     ],
     questions: [
       'anyone else here from the forums?', 'is there a guide for this game?', 'what are you supposed to do here?',
@@ -686,60 +687,58 @@ const DIALOGUE = {
   },
   adult: {
     greetings: [
-      'hello', 'hi', 'hey everyone', 'greetings', 'good day', 'hello there',
-      'hi folks', 'afternoon everyone', 'evening all', 'howdy'
+      'hello', 'hi', 'hey', 'hey everyone', 'hi there',
+      'hi folks', 'afternoon', 'evening', 'howdy', 'sup'
     ],
     general: [
-      'interesting game', 'this is quite charming', 'not bad', 'clever design', 'my kid likes this game',
+      'this is actually fun', 'not bad', 'pretty charming', 'my kid loves this game',
       'my son plays this', 'my daughter loves this', 'playing with my kid',
-      'checking this out for my children', 'seeing what the fuss is about',
-      'surprisingly well designed', 'good moderation system', 'safe environment for kids',
-      'impressed by the chat filter', 'nice community features', 'well thought out',
-      'good educational value', 'teaches social skills', 'nice creative outlet',
-      'better than TV', 'glad this exists', 'wholesome content',
-      'refreshing compared to other games', 'no violence which is great',
-      'taking a break from work', 'coffee break', 'lunch break entertainment',
-      'interesting business model', 'well monetized', 'good freemium approach'
+      'checking this out', 'see what the hype is about',
+      'surprisingly well made', 'seems safe for kids', 'good chat filter',
+      'nice community', 'better than TV', 'glad this exists', 'wholesome game',
+      'no violence which is nice', 'relaxing',
+      'on my break', 'coffee break', 'unwinding',
+      'killing time', 'oddly addicting', 'weirdly enjoyable'
     ],
     questions: [
-      'is this game appropriate for children?', 'how does the membership work?', 'whats the goal of this game?',
-      'what age range is this for?', 'how is moderation handled?', 'are there parental controls?',
-      'how do i monitor my childs activity?', 'is the chat safe?', 'any concerning content?',
-      'how much does membership cost?', 'are there hidden fees?', 'subscription or one-time?',
-      'can progress be saved?', 'multi-device support?', 'how to reset password?',
-      'who develops this?', 'company background?', 'how long has this been around?'
+      'is this okay for kids?', 'hows the membership work?', 'whats the point of this game?',
+      'what age is this for?', 'is the chat safe?', 'are there parental controls?',
+      'how do i check what my kid is doing?', 'any bad content?',
+      'how much is membership?', 'any hidden fees?',
+      'how do i save progress?', 'how to reset password?',
+      'who made this?', 'how long has this been around?'
     ]
   },
   
   // Beta testing specific
   beta: {
     child: [
-      'this is so cool', 'i love being a beta tester', 'i got to test this game!', 'im helping make the game!',
-      'im a beta tester', 'i test games', 'im special', 'i got picked', 'they chose me',
-      'found bugs today', 'helping the developers', 'making the game better',
-      'beta party was amazing', 'the party was so fun', 'i went to the party',
-      'im so lucky', 'not everyone can play', 'exclusive access', 'early player'
+      'this is SO COOL', 'i LOVE being a beta tester!!!', 'i got to test this game!!!', 'im helping make the game!!!',
+      'IM A BETA TESTER', 'i test games :D', 'im special!!!', 'I GOT PICKED', 'THEY CHOSE ME',
+      'i found bugs today', 'im helping the developers', 'im making the game better',
+      'beta party was AMAZING', 'the party was SO FUN', 'i went to the party!!!',
+      'im so lucky!!!', 'not everyone can play', 'i have exclusive access', 'i was here early'
     ],
     preteen: [
-      'this beta test is awesome', 'im testing the game', 'finding bugs is fun', 'beta testing rocks',
-      'official beta tester here', 'been here since beta', 'beta crew',
-      'helping with development', 'reporting bugs', 'giving feedback',
-      'the beta party was sick', 'party was epic', 'got my hat at the party',
-      'been playing since august', 'early adopter', 'before it was popular'
+      'this beta test is awesome', 'im testing the game', 'finding bugs is actually fun', 'beta testing rocks',
+      'official beta tester here', 'been here since the beta', 'beta crew represent',
+      'helping with development', 'i report bugs when i find them', 'giving feedback to devs',
+      'the beta party was sick', 'that party was epic', 'got my party hat there',
+      'been playing since august', 'early adopter lol', 'i was here before it was popular'
     ],
     teen: [
-      'beta testing is pretty fun', 'finding bugs for the devs', 'this game has potential', 'glad i got into the beta',
-      'interesting to see game development', 'watching this evolve', 'been here since day one',
-      'providing constructive feedback', 'QA testing basically', 'unpaid QA lol',
-      'beta party was a good time', 'party was cool', 'met some cool people at the party',
-      'curious how this will turn out', 'has promise', 'could be big'
+      'beta testing is actually fun', 'finding bugs for the devs', 'this game has potential', 'glad i got into the beta',
+      'interesting watching this develop', 'seeing it evolve is cool', 'been here since day one',
+      'trying to give constructive feedback', 'basically QA testing', 'unpaid QA lol',
+      'beta party was a good time', 'party was pretty cool', 'met some cool people there',
+      'curious how this turns out', 'has potential', 'could actually be big'
     ],
     adult: [
-      'interesting beta test', 'good to see the game developing', 'been testing since august', 'providing feedback to the team',
-      'professional perspective on the beta', 'well organized test', 'good communication from devs',
-      'impressed with the development process', 'solid foundation', 'good potential here',
-      'the party was well executed', 'nice community event', 'good engagement strategy',
-      'interested in the business side', 'watching this company', 'could be successful'
+      'interesting beta test', 'cool watching this develop', 'been testing since august', 'giving feedback when i can',
+      'interesting from a dev perspective', 'pretty well organized', 'devs communicate well',
+      'solid development process', 'good foundation', 'this has potential',
+      'the party was fun', 'nice community event', 'good way to engage players',
+      'curious about the business model', 'watching how this grows', 'could be successful'
     ]
   },
   
@@ -933,6 +932,124 @@ const DIALOGUE = {
       'haha got me', 'fair play', 'good game', 'nice one',
       'here we go', 'game on', 'alright then'
     ]
+  },
+  
+  // Inappropriate username reactions
+  inappropriateUsername: {
+    child: [
+      'ur name is weird', 'thats a bad word', 'ur name is mean',
+      'why is ur name that', 'thats not nice', 'bad name',
+      'ur gonna get banned', 'thats inappropriate', 'im telling'
+    ],
+    preteen: [
+      'lol ur name', 'nice name lmao', 'ur name is wild',
+      'bruh ur username', 'how is that allowed', 'edgy name',
+      'ur name tho', 'lmao what', 'thats gonna get banned',
+      'watch out mods', 'really dude', 'mature'
+    ],
+    teen: [
+      'nice username dipshit', 'real mature name', 'edgy',
+      'wow so edgy', 'trying too hard', 'ur name is cringe',
+      'how original', 'thats gonna get you banned', 'mods incoming',
+      'enjoy the ban', 'reported', 'nice try'
+    ],
+    adult: [
+      'inappropriate username', 'that username is not acceptable',
+      'you should change that', 'really', 'thats inappropriate',
+      'not appropriate for children', 'consider changing your name',
+      'that will get you banned', 'mods will see that'
+    ]
+  },
+  
+  // Beta hat bot reactions to being pelted by the mob
+  betaMobPelted: {
+    child: [
+      'stop it', 'ow that hurts', 'guys stop', 'not fair', 'why are you doing this',
+      'thats mean', 'leave me alone', 'stop throwing at me', 'this isnt nice'
+    ],
+    preteen: [
+      'ow stop it', 'guys seriously', 'cut it out', 'not cool',
+      'stop throwing', 'come on', 'really guys', 'knock it off'
+    ],
+    teen: [
+      'seriously stop', 'this is getting old', 'fuck off with the snowballs',
+      'stop it', 'enough', 'cut the shit', 'this isnt funny',
+      'real mature', 'stop', 'done with this'
+    ],
+    adult: [
+      'please stop throwing snowballs', 'this is excessive', 'enough now',
+      'stop this behavior', 'this is not funny', 'cease this immediately',
+      'very immature', 'stop right now', 'this has gone too far'
+    ]
+  },
+  
+  // Bot reactions when a party hat player begs them (ironic situation)
+  betaBeggingBeta: {
+    child: [
+      'but u have a party hat too', 'ur a beta tester', 'u already have one',
+      'why are u asking me', 'u got the same hat', 'ur rich too'
+    ],
+    preteen: [
+      'bruh u have a party hat', 'ur literally a beta tester', 'why tho',
+      'u got the same hat as me', 'makes no sense', 'ur trolling right',
+      'u have one too lmao', 'bro what', 'are u serious'
+    ],
+    teen: [
+      'dude u have a party hat too', 'ur a beta tester wtf', 'are u joking',
+      'u literally have the same hat', 'this is stupid', 'what are u doing',
+      'ur trolling', 'makes zero sense', 'bruh moment', 'the irony'
+    ],
+    adult: [
+      'you have a party hat as well', 'you are also a beta tester',
+      'this makes no sense', 'why would you ask me', 'you have one too',
+      'this is rather ironic', 'we are both beta testers'
+    ]
+  },
+  
+  // Timeline-aware question responses
+  questionResponses: {
+    // "who made this", "who develops this" etc.
+    developer: {
+      preRocketsnail: {
+        child: ['rocketsnail made it', 'rocketsnail', 'a guy named rocketsnail'],
+        preteen: ['rocketsnail', 'some guy called rocketsnail', 'new horizon'],
+        teen: ['rocketsnail', 'new horizon interactive', 'lance priebe i think'],
+        adult: ['new horizon made it', 'rocketsnail i think', 'lance priebe made it']
+      },
+      postDisney: {
+        child: ['disney', 'disney made it', 'disney owns it now'],
+        preteen: ['disney', 'disney bought it', 'disney canada'],
+        teen: ['disney', 'disney acquired it', 'disney canada now'],
+        adult: ['disney owns it now', 'disney canada', 'disney bought it in 2007']
+      }
+    }
+  },
+  
+  // Beta tester reactions to seeing another beta tester being mobbed
+  betaWatchingMob: {
+    child: [
+      'theyre all following that person', 'so many people around them',
+      'everyone wants coins', 'glad its not me', 'poor guy',
+      'that looks annoying'
+    ],
+    preteen: [
+      'lol they got a whole mob', 'rip that guy', 'sucks to be them',
+      'glad im not getting mobbed', 'thats what happens', 'yikes',
+      'they cant even move', 'beta tester problems', 'rip lol',
+      'poor dude', 'thats crazy'
+    ],
+    teen: [
+      'damn they getting mobbed', 'beta tester life', 'rip',
+      'thats rough', 'better them than me', 'classic beta moment',
+      'party hat problems', 'they cant catch a break', 'oof',
+      'welcome to the club', 'been there', 'i feel that'
+    ],
+    adult: [
+      'theyre getting swarmed', 'yikes', 'i know that feeling',
+      'beta tester problems', 'rough situation',
+      'they got a crowd', 'been there before',
+      'comes with the territory'
+    ]
   }
 };
 
@@ -1121,6 +1238,108 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
     }
   }
   
+  // Disney Acquisition Announcement - First Week (2007-08-01 to 2007-08-08)
+  if (isGreaterOrEqual(version, '2007-08-01') && isLower(version, '2007-08-08')) {
+    if (age === 'child') {
+      timelineMessages.push('DISNEY BOUGHT CLUB PENGUIN', 'disney owns this now', 'club penguin is disney now',
+        'omg disney', 'this is gonna be so cool', 'disney is awesome', 'i cant believe disney bought this',
+        'are we gonna see mickey mouse', 'disney club penguin');
+    } else if (age === 'preteen') {
+      timelineMessages.push('disney just bought club penguin', 'disney acquisition', 'disney owns this now',
+        'club penguin is disney property now', 'huge news', 'disney deal just happened',
+        'wonder what this means', 'big changes coming', 'disney money incoming');
+    } else if (age === 'teen') {
+      timelineMessages.push('disney acquired club penguin', 'disney bought the game', 'acquisition just announced',
+        'club penguin sold to disney', 'wonder if this is good or bad', 'disney has deep pockets',
+        'hope they dont ruin it', 'could be interesting', 'big corporate buyout');
+    } else if (age === 'adult') {
+      timelineMessages.push('disney bought club penguin', 'disney just acquired this',
+        'big acquisition', 'interesting move', 'disney owns it now',
+        'wonder where this is going', 'could be good or bad', 'big investment');
+    }
+  }
+  
+  // Disney Acquisition Uncertainty (2007-08-08 to 2007-11-01)
+  if (isGreaterOrEqual(version, '2007-08-08') && isLower(version, '2007-11-01')) {
+    if (age === 'child') {
+      timelineMessages.push('whens disney gonna do stuff', 'is disney changing things', 'disney hasnt done much yet',
+        'still waiting for disney stuff', 'wonder what disney will add');
+    } else if (age === 'preteen') {
+      timelineMessages.push('what is disney planning', 'wonder what changes are coming', 'disney been quiet',
+        'havent seen many changes yet', 'waiting to see what disney does', 'hope disney doesnt mess it up',
+        'concerned about disney changes', 'will disney keep it the same');
+    } else if (age === 'teen') {
+      timelineMessages.push('whats disney gonna do with this', 'no major changes yet', 'disney playing it safe',
+        'waiting for the other shoe to drop', 'hope they dont disney-fy it too much',
+        'concerned about direction', 'cautiously optimistic', 'wait and see approach');
+    } else if (age === 'adult') {
+      timelineMessages.push('waiting to see what disney does', 'not many changes yet',
+        'transition period', 'keeping an eye on it', 'hope they keep it the same',
+        'worried about commercialization', 'curious what their plan is');
+    }
+  }
+  
+  // Disney Budget Increase & Coins for Change Era (2007-11-01 to 2008-01-01)
+  if (isGreaterOrEqual(version, '2007-11-01') && isLower(version, '2008-01-01')) {
+    if (age === 'child') {
+      timelineMessages.push('so much new stuff', 'disney is adding cool things', 'game is getting better',
+        'more stuff than before', 'disney is doing good');
+    } else if (age === 'preteen') {
+      timelineMessages.push('budget increase is noticeable', 'lots of new content', 'disney money showing',
+        'quality improvements', 'more updates than before', 'this is actually good so far',
+        'still wonder about long term though');
+    } else if (age === 'teen') {
+      timelineMessages.push('clear budget increase', 'production quality went up', 'disney money is real',
+        'more polished updates', 'have to admit its improving', 'quality is noticeably better',
+        'still concerned about future changes though', 'good so far but we will see');
+    } else if (age === 'adult') {
+      timelineMessages.push('clear budget increase', 'production quality is better',
+        'they spent more money on this', 'quality went up', 'looking good so far',
+        'cautiously optimistic', 'well see how it goes');
+    }
+  }
+  
+  // Coins for Change (2007-12-14 to 2007-12-24)
+  if (isGreaterOrEqual(version, '2007-12-14') && isLower(version, '2007-12-24')) {
+    if (age === 'child') {
+      timelineMessages.push('COINS FOR CHANGE', 'we can donate to charity', 'giving my coins to help people',
+        'this is so cool', 'donating for real charity', 'helping with my coins',
+        'coins go to real charities', 'which charity should i pick');
+    } else if (age === 'preteen') {
+      timelineMessages.push('coins for change is amazing', 'donating coins to charity', 'real world donations',
+        'this is actually really cool', 'virtual coins to real money', 'great charity initiative',
+        'which cause you donating to', 'disney did good with this');
+    } else if (age === 'teen') {
+      timelineMessages.push('coins for change is impressive', 'virtual to real charity donations',
+        'actually brilliant concept', 'using game coins for real good', 'which organization you picking',
+        'disney nailed this', 'smart charitable initiative', 'this is genuinely good');
+    } else if (age === 'adult') {
+      timelineMessages.push('great charity idea', 'coins for change is awesome', 'virtual coins to real charity',
+        'really cool initiative', 'teaching kids about giving',
+        'smart charity system', 'good use of game currency');
+    }
+  }
+  
+  // Early 2008 - Art Direction Shift (2008-01-01 to 2008-04-01)
+  if (isGreaterOrEqual(version, '2008-01-01') && isLower(version, '2008-04-01')) {
+    if (age === 'child') {
+      timelineMessages.push('the art looks different', 'things look weird now', 'why does it look different',
+        'i miss the old style', 'new art is strange');
+    } else if (age === 'preteen') {
+      timelineMessages.push('art style is changing', 'notice the different art direction', 'style is shifting',
+        'not sure how i feel about new art', 'old style was better', 'art looks more corporate',
+        'lots of new people working on it', 'feels different now');
+    } else if (age === 'teen') {
+      timelineMessages.push('clear art direction shift', 'aesthetic is changing', 'not a fan of new style',
+        'losing the original charm', 'feels more corporate now', 'can tell new people are working on it',
+        'disney influence showing', 'preferred the old art', 'character is changing');
+    } else if (age === 'adult') {
+      timelineMessages.push('art style changed', 'looks different now', 'new team working on it',
+        'more corporate looking', 'losing the original feel', 'lot more people on the team',
+        'disney influence showing', 'worried about the direction');
+    }
+  }
+  
   // Aqua Grabber (2008-02-19)
   if (isGreaterOrEqual(version, '2008-02-19') && isLower(version, '2008-03-10')) {
     if (age === 'preteen') {
@@ -1139,7 +1358,7 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
     } else if (age === 'teen') {
       timelineMessages.push('card jitsu is actually good', 'new card game at dojo', 'card jitsu released', 'ninja path');
     } else if (age === 'adult') {
-      timelineMessages.push('interesting card game', 'card jitsu system', 'new dojo feature');
+      timelineMessages.push('card game is fun', 'card jitsu is cool', 'new dojo thing');
     }
   }
   
@@ -1506,6 +1725,71 @@ function applyChatBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) 
       }
     }
     
+    // Inappropriate username detection
+    const realPlayers = room.players.filter((p: Client) => !p.isBot);
+    for (const player of realPlayers) {
+      if (isInappropriateUsername(player.username) && Math.random() < 0.2) {
+        const reactions = DIALOGUE.inappropriateUsername[behavior.age];
+        if (reactions) {
+          const reaction = reactions[randomInt(0, reactions.length - 1)];
+          botSendChat(bot, reaction);
+          return;
+        }
+      }
+    }
+    
+    // Easter egg: Detect if party hat player is near party hat bot (beta begging beta)
+    if (bot.penguin.head === 413) {
+      for (const player of realPlayers) {
+        if (player.penguin.head === 413) {
+          const distance = Math.sqrt(
+            Math.pow(player.x - bot.x, 2) + Math.pow(player.y - bot.y, 2)
+          );
+          // If party hat player is close (within 150 pixels) and bot is not already chatting
+          if (distance < 150 && Math.random() < 0.3) {
+            const reactions = DIALOGUE.betaBeggingBeta[behavior.age];
+            if (reactions) {
+              const reaction = reactions[randomInt(0, reactions.length - 1)];
+              botSendChat(bot, reaction);
+              return;
+            }
+          }
+        }
+      }
+    }
+    
+    // Easter egg: Beta testers react to seeing another beta tester being mobbed
+    if (bot.penguin.head === 413 && Math.random() < 0.15) {
+      // Find OTHER party hat wearers (both bots and players, but not ourselves)
+      const otherBetaTesters: Client[] = [
+        ...room.botGroup.bots.filter((b: Client) => b.penguin.head === 413 && b !== bot),
+        ...realPlayers.filter((p: Client) => p.penguin.head === 413)
+      ];
+      
+      for (const otherBeta of otherBetaTesters) {
+        // Count how many kids are swarming the other beta tester
+        const swarmingKids = room.botGroup.bots.filter((b: Client) => {
+          const bBehavior = botBehaviors.get(b);
+          if (!bBehavior) return false;
+          if (bBehavior.age !== 'child' && bBehavior.age !== 'preteen') return false;
+          const dist = Math.sqrt(
+            Math.pow(otherBeta.x - b.x, 2) + Math.pow(otherBeta.y - b.y, 2)
+          );
+          return dist < 150;
+        }).length;
+        
+        // If other beta tester has 3+ kids mobbing them, comment on it
+        if (swarmingKids >= 3) {
+          const reactions = DIALOGUE.betaWatchingMob[behavior.age];
+          if (reactions) {
+            const reaction = reactions[randomInt(0, reactions.length - 1)];
+            botSendChat(bot, reaction);
+            return;
+          }
+        }
+      }
+    }
+    
     // Beta tester specific chat
     if (behavior.hasBetaHat && currentDate <= new Date('2005-10-24')) {
       if (Math.random() < 0.2) {
@@ -1859,6 +2143,45 @@ function applyPartyHatAttractionBehavior(bot: Client, room: any, intervals: Node
   }, 1500); // Check frequently (every 1.5 seconds)
   
   intervals.push(attractionInterval);
+  
+  // Snowball throwing behavior - occasionally throw snowballs at the beta tester
+  const snowballInterval = setInterval(() => {
+    if (bot.room !== room) {
+      clearInterval(snowballInterval);
+      return;
+    }
+    
+    if (partyHatTarget && partyHatTarget.room === room) {
+      const distance = Math.sqrt(
+        Math.pow(partyHatTarget.x - bot.x, 2) + Math.pow(partyHatTarget.y - bot.y, 2)
+      );
+      
+      // Only throw if close enough (within 200 pixels)
+      if (distance < 200) {
+        // 30% chance to throw a snowball
+        if (Math.random() < 0.3) {
+          bot.throwSnowball(String(partyHatTarget.x), String(partyHatTarget.y));
+          
+          // Occasionally throw multiple snowballs in rapid succession (10% chance)
+          if (Math.random() < 0.1) {
+            setTimeout(() => {
+              if (bot.room === room && partyHatTarget && partyHatTarget.room === room) {
+                bot.throwSnowball(String(partyHatTarget.x), String(partyHatTarget.y));
+              }
+            }, 400);
+            
+            setTimeout(() => {
+              if (bot.room === room && partyHatTarget && partyHatTarget.room === room) {
+                bot.throwSnowball(String(partyHatTarget.x), String(partyHatTarget.y));
+              }
+            }, 800);
+          }
+        }
+      }
+    }
+  }, 2500); // Check every 2.5 seconds
+  
+  intervals.push(snowballInterval);
 }
 
 function applyJokesterBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
@@ -2009,6 +2332,55 @@ function isSuperVulgar(message: string): boolean {
 }
 
 /**
+ * Check if a username is inappropriate
+ */
+function isInappropriateUsername(username: string | undefined): boolean {
+  if (!username) return false;
+  
+  const inappropriateWords = [
+    'fuck', 'shit', 'ass', 'bitch', 'dick', 'cock', 'pussy', 'cunt',
+    'nigger', 'nigga', 'faggot', 'fag', 'retard', 'rape', 'sex',
+    'porn', 'xxx', 'cum', 'penis', 'vagina', 'slut', 'whore',
+    'piss', 'damn', 'hell', 'bastard', 'twat', 'dildo',
+    'anal', 'hitler', 'nazi', 'kkk', 'kill', 'death', 'die',
+    'suicide', 'pedo', 'molest', 'slave', 'gay', 'homo'
+  ];
+  
+  const lowerUsername = username.toLowerCase();
+  return inappropriateWords.some(word => lowerUsername.includes(word));
+}
+
+/**
+ * Check if a message is begging for coins/items
+ */
+function isBeggingMessage(message: string): boolean {
+  const beggingPhrases = [
+    'give me coins', 'can i have coins', 'pls coins', 'plz coins',
+    'free coins', 'gimme coins', 'spare coins', 'coins pls', 'coins plz',
+    'give coins', 'need coins', 'want coins', 'donate', 'im poor',
+    'can i have', 'give me', 'pls give', 'plz give', 'hook me up'
+  ];
+  
+  const lowerMessage = message.toLowerCase();
+  return beggingPhrases.some(phrase => lowerMessage.includes(phrase));
+}
+
+/**
+ * Check if message is asking about the developer
+ */
+function isDeveloperQuestion(message: string): boolean {
+  const developerQuestions = [
+    'who made this', 'who develops this', 'who created this',
+    'who owns this', 'who made the game', 'who created the game',
+    'who developed this', 'whos the owner', 'who runs this',
+    'company background', 'who made it', 'whos behind this'
+  ];
+  
+  const lowerMessage = message.toLowerCase();
+  return developerQuestions.some(phrase => lowerMessage.includes(phrase));
+}
+
+/**
  * Handle annoying bot reaction to player annoyance
  */
 function handleAnnoyingBotReaction(player: Client, message: string) {
@@ -2044,6 +2416,239 @@ function handleAnnoyingBotReaction(player: Client, message: string) {
 }
 
 /**
+ * Handle beta begging beta easter egg - when party hat player begs near party hat bot
+ */
+function handleBetaBeggingBeta(player: Client, message: string) {
+  if (!player.room) return;
+  
+  // Only react if player is wearing a party hat and begging
+  if (player.penguin.head !== 413) return;
+  if (!isBeggingMessage(message)) return;
+  
+  // Find nearby party hat bots
+  player.room.botGroup.bots.forEach((bot: Client) => {
+    if (bot.penguin.head !== 413) return; // Bot must have party hat
+    
+    const behavior = botBehaviors.get(bot);
+    if (!behavior) return;
+    
+    const distance = Math.sqrt(
+      Math.pow(player.x - bot.x, 2) + Math.pow(player.y - bot.y, 2)
+    );
+    
+    // Only react if within 200 pixels
+    if (distance > 200) return;
+    
+    // 70% chance to call out the irony
+    if (Math.random() < 0.7) {
+      const reactions = DIALOGUE.betaBeggingBeta[behavior.age];
+      if (reactions) {
+        const reaction = reactions[randomInt(0, reactions.length - 1)];
+        setTimeout(() => {
+          if (bot.room === player.room) {
+            botSendChat(bot, reaction);
+          }
+        }, randomInt(500, 1500));
+      }
+    }
+  });
+}
+
+/**
+ * Handle timeline-aware question responses
+ */
+function handleQuestionResponses(player: Client, message: string) {
+  if (!player.room) return;
+  
+  // Check for developer question
+  if (isDeveloperQuestion(message)) {
+    // Determine timeline based on game version
+    const version = player.server.settings.version;
+    const isPostDisney = isGreaterOrEqual(version, '2007-08-01');
+    
+    player.room.botGroup.bots.forEach((bot: Client) => {
+      const behavior = botBehaviors.get(bot);
+      if (!behavior) return;
+      
+      // Only 30% of bots respond to avoid spam
+      if (Math.random() > 0.3) return;
+      
+      // Get appropriate response based on timeline and bot age
+      const responseSet = isPostDisney 
+        ? DIALOGUE.questionResponses.developer.postDisney[behavior.age]
+        : DIALOGUE.questionResponses.developer.preRocketsnail[behavior.age];
+      
+      if (responseSet) {
+        const response = responseSet[randomInt(0, responseSet.length - 1)];
+        setTimeout(() => {
+          if (bot.room === player.room) {
+            botSendChat(bot, response);
+          }
+        }, randomInt(800, 2500));
+      }
+    });
+  }
+}
+
+/**
+ * Handle party hat swarming bot reaction when player tells them to fuck off
+ */
+function handlePartyHatSwarmReaction(player: Client, message: string) {
+  if (!player.room) return;
+  
+  // Only react if player is wearing a party hat
+  if (player.penguin.head !== 413) return;
+  
+  const isVeryAngry = isSuperVulgar(message);
+  const isAnnoyed = isAnnoyedMessage(message);
+  
+  if (!isAnnoyed && !isVeryAngry) return;
+  
+  // Find all child/preteen bots swarming this player
+  player.room.botGroup.bots.forEach((bot: Client) => {
+    const behavior = botBehaviors.get(bot);
+    if (!behavior) return;
+    
+    // Only react if they're a kid/preteen and close to the player
+    if (behavior.age !== 'child' && behavior.age !== 'preteen') return;
+    
+    const distance = Math.sqrt(
+      Math.pow(player.x - bot.x, 2) + Math.pow(player.y - bot.y, 2)
+    );
+    
+    // Only react if within 200 pixels (swarming distance)
+    if (distance > 200) return;
+    
+    // React based on age and anger level
+    if (isVeryAngry) {
+      // Super angry - everyone backs off
+      if (behavior.age === 'child') {
+        // Children get scared and run away
+        const messages = ['sorry', 'im sorry', 'okay okay', 'leaving', 'bye'];
+        const msg = messages[randomInt(0, messages.length - 1)];
+        setTimeout(() => {
+          if (bot.room === player.room) {
+            botSendChat(bot, msg);
+            // Move far away
+            const awayX = bot.x + (bot.x - player.x) * 3;
+            const awayY = bot.y + (bot.y - player.y) * 3;
+            setTimeout(() => {
+              if (bot.room === player.room) {
+                bot.setPosition(
+                  Math.max(100, Math.min(700, awayX)),
+                  Math.max(100, Math.min(500, awayY))
+                );
+              }
+            }, 500);
+          }
+        }, randomInt(300, 1000));
+      } else {
+        // Preteens back off but with attitude
+        const messages = ['alright chill', 'jeez ok', 'whatever', 'fine', 'calm down'];
+        const msg = messages[randomInt(0, messages.length - 1)];
+        setTimeout(() => {
+          if (bot.room === player.room) {
+            botSendChat(bot, msg);
+            // Move away but not as far
+            const awayX = bot.x + (bot.x - player.x) * 2;
+            const awayY = bot.y + (bot.y - player.y) * 2;
+            setTimeout(() => {
+              if (bot.room === player.room) {
+                bot.setPosition(
+                  Math.max(100, Math.min(700, awayX)),
+                  Math.max(100, Math.min(500, awayY))
+                );
+              }
+            }, 500);
+          }
+        }, randomInt(300, 1000));
+      }
+    } else {
+      // Normal annoyance - mixed reactions
+      const rand = Math.random();
+      
+      if (behavior.age === 'child') {
+        if (rand < 0.7) {
+          // 70% back off
+          const messages = ['ok', 'sorry', 'fine'];
+          const msg = messages[randomInt(0, messages.length - 1)];
+          setTimeout(() => {
+            if (bot.room === player.room) {
+              botSendChat(bot, msg);
+              const awayX = bot.x + (bot.x - player.x) * 2;
+              const awayY = bot.y + (bot.y - player.y) * 2;
+              setTimeout(() => {
+                if (bot.room === player.room) {
+                  bot.setPosition(
+                    Math.max(100, Math.min(700, awayX)),
+                    Math.max(100, Math.min(500, awayY))
+                  );
+                }
+              }, 500);
+            }
+          }, randomInt(300, 1000));
+        } else {
+          // 30% keep begging
+          const message = getBotChatMessage(bot, 'betaHat', player.room);
+          if (message) {
+            setTimeout(() => {
+              if (bot.room === player.room) {
+                botSendChat(bot, message);
+              }
+            }, randomInt(500, 1500));
+          }
+        }
+      } else {
+        // Preteens
+        if (rand < 0.4) {
+          // 40% back off
+          const messages = ['fine', 'whatever', 'ok'];
+          const msg = messages[randomInt(0, messages.length - 1)];
+          setTimeout(() => {
+            if (bot.room === player.room) {
+              botSendChat(bot, msg);
+              const awayX = bot.x + (bot.x - player.x) * 1.5;
+              const awayY = bot.y + (bot.y - player.y) * 1.5;
+              setTimeout(() => {
+                if (bot.room === player.room) {
+                  bot.setPosition(
+                    Math.max(100, Math.min(700, awayX)),
+                    Math.max(100, Math.min(500, awayY))
+                  );
+                }
+              }, 500);
+            }
+          }, randomInt(300, 1000));
+        } else if (rand < 0.7) {
+          // 30% get defensive/snarky
+          const defensiveMessages = [
+            'bro relax', 'chill out', 'not that serious', 'its just a hat',
+            'why so mad', 'ur the one with the hat', 'ur rich anyway',
+            'just asking', 'no need to be rude', 'geez'
+          ];
+          const msg = defensiveMessages[randomInt(0, defensiveMessages.length - 1)];
+          setTimeout(() => {
+            if (bot.room === player.room) {
+              botSendChat(bot, msg);
+            }
+          }, randomInt(300, 1000));
+        } else {
+          // 30% keep begging
+          const message = getBotChatMessage(bot, 'betaHat', player.room);
+          if (message) {
+            setTimeout(() => {
+              if (bot.room === player.room) {
+                botSendChat(bot, message);
+              }
+            }, randomInt(500, 1500));
+          }
+        }
+      }
+    }
+  });
+}
+
+/**
  * Detect if a snowball hit any bots and have them react
  */
 function detectSnowballHit(room: any, targetX: number, targetY: number, thrower: Client) {
@@ -2059,11 +2664,37 @@ function detectSnowballHit(room: any, targetX: number, targetY: number, thrower:
       if (behavior) {
         // Chat reaction to being hit (70% chance)
         if (Math.random() < 0.7) {
-          // Use different dialogue for Snow Forts (playful) vs other rooms (annoyed)
-          const isSnowForts = room.id === ROOM_IDS.SNOW_FORTS;
-          const reactions = isSnowForts 
-            ? DIALOGUE.snowballHitForts[behavior.age]
-            : DIALOGUE.snowballHit[behavior.age];
+          let reactions;
+          
+          // Special reaction if bot has party hat and is being pelted by the mob
+          if (bot.penguin.head === 413 && thrower.isBot) {
+            const throwerBehavior = botBehaviors.get(thrower);
+            // Check if thrower is a child/preteen (the mob)
+            if (throwerBehavior && (throwerBehavior.age === 'child' || throwerBehavior.age === 'preteen')) {
+              // Count nearby kids to see if being mobbed
+              const nearbyKids = room.botGroup.bots.filter((b: Client) => {
+                const bBehavior = botBehaviors.get(b);
+                if (!bBehavior) return false;
+                if (bBehavior.age !== 'child' && bBehavior.age !== 'preteen') return false;
+                const dist = Math.sqrt(Math.pow(bot.x - b.x, 2) + Math.pow(bot.y - b.y, 2));
+                return dist < 200;
+              }).length;
+              
+              // If 2+ kids nearby, use special mob pelted dialogue
+              if (nearbyKids >= 2) {
+                reactions = DIALOGUE.betaMobPelted[behavior.age];
+              }
+            }
+          }
+          
+          // Fall back to normal dialogue if no special case
+          if (!reactions) {
+            // Use different dialogue for Snow Forts (playful) vs other rooms (annoyed)
+            const isSnowForts = room.id === ROOM_IDS.SNOW_FORTS;
+            reactions = isSnowForts 
+              ? DIALOGUE.snowballHitForts[behavior.age]
+              : DIALOGUE.snowballHit[behavior.age];
+          }
           
           if (reactions) {
             const reaction = reactions[randomInt(0, reactions.length - 1)];
@@ -2236,6 +2867,19 @@ handler.xt(Handle.SendMessageOld, (client, id, message) => {
   if (isAnnoyedMessage(message)) {
     handleAnnoyingBotReaction(client, message);
   }
+  
+  // Check if party hat wearer is telling off swarming bots
+  if (isAnnoyedMessage(message) || isSuperVulgar(message)) {
+    handlePartyHatSwarmReaction(client, message);
+  }
+  
+  // Easter egg: Check if party hat player is begging near party hat bot
+  if (isBeggingMessage(message)) {
+    handleBetaBeggingBeta(client, message);
+  }
+  
+  // Timeline-aware question responses
+  handleQuestionResponses(client, message);
 });
 
 handler.xt(Handle.SendMessageOld, commandsHandler);

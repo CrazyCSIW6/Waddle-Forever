@@ -1299,8 +1299,8 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
     }
   }
   
-  // Coins for Change (2007-12-14 to 2007-12-24)
-  if (isGreaterOrEqual(version, '2007-12-14') && isLower(version, '2007-12-24')) {
+  // Coins for Change (2007-12-15 to 2007-12-24)
+  if (isGreaterOrEqual(version, '2007-12-15') && isLower(version, '2007-12-25')) {
     if (age === 'child') {
       timelineMessages.push('COINS FOR CHANGE', 'we can donate to charity', 'giving my coins to help people',
         'this is so cool', 'donating for real charity', 'helping with my coins',
@@ -1382,8 +1382,8 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
 function getEventDialogue(version: Version, age: BotAge): string[] {
   const eventMessages: string[] = [];
   
-  // Beta Test Party (Sep 21, 2005 - 2 hours only)
-  if (isGreaterOrEqual(version, '2005-09-21') && isLower(version, '2005-09-22')) {
+  // Beta Test Party (October 24, 2005)
+  if (isGreaterOrEqual(version, '2005-10-24') && isLower(version, '2005-10-25')) {
     if (age === 'child') {
       eventMessages.push('PARTY TIME', 'this party is awesome', 'best party ever', 'im at the party');
     } else if (age === 'preteen') {
@@ -1393,8 +1393,8 @@ function getEventDialogue(version: Version, age: BotAge): string[] {
     }
   }
   
-  // Pizza Parlor Opening Party (Feb 2006)
-  if (isGreaterOrEqual(version, '2006-02-24') && isLower(version, '2006-03-01')) {
+  // Pizza Parlor Opening Party (February 24, 2006)
+  if (isGreaterOrEqual(version, '2006-02-24') && isLower(version, '2006-02-25')) {
     if (age === 'child') {
       eventMessages.push('PIZZA PARTY', 'pizza parlor opening', 'new pizza place', 'pizza celebration');
     } else if (age === 'preteen') {
@@ -1402,8 +1402,8 @@ function getEventDialogue(version: Version, age: BotAge): string[] {
     }
   }
   
-  // Egg Hunt (April 2006)
-  if (isGreaterOrEqual(version, '2006-04-14') && isLower(version, '2006-04-17')) {
+  // Egg Hunt (April 12-23, 2006)
+  if (isGreaterOrEqual(version, '2006-04-12') && isLower(version, '2006-04-24')) {
     if (age === 'child') {
       eventMessages.push('EGG HUNT', 'finding eggs', 'where are the eggs', 'egg hunting time', 'found any eggs');
     } else if (age === 'preteen') {
@@ -1413,8 +1413,8 @@ function getEventDialogue(version: Version, age: BotAge): string[] {
     }
   }
   
-  // Cave Opening (May 2006)
-  if (isGreaterOrEqual(version, '2006-05-26') && isLower(version, '2006-06-01')) {
+  // Mine Opening and Cave Party (May 25-26, 2006)
+  if (isGreaterOrEqual(version, '2006-05-25') && isLower(version, '2006-05-27')) {
     if (age === 'child') {
       eventMessages.push('the cave opened', 'new cave', 'cave party', 'cave is cool');
     } else if (age === 'preteen') {
@@ -1422,8 +1422,8 @@ function getEventDialogue(version: Version, age: BotAge): string[] {
     }
   }
   
-  // Summer Party (June 2006)
-  if (isGreaterOrEqual(version, '2006-06-16') && isLower(version, '2006-06-26')) {
+  // Summer Party (June 22 - July 5, 2006)
+  if (isGreaterOrEqual(version, '2006-06-22') && isLower(version, '2006-07-06')) {
     if (age === 'child') {
       eventMessages.push('SUMMER PARTY', 'summer is here', 'beach party', 'summer fun');
     } else if (age === 'preteen') {
@@ -1433,8 +1433,8 @@ function getEventDialogue(version: Version, age: BotAge): string[] {
     }
   }
   
-  // Sport Party (Aug 2006)
-  if (isGreaterOrEqual(version, '2006-08-11') && isLower(version, '2006-08-22')) {
+  // Sports Party (August 17-28, 2006)
+  if (isGreaterOrEqual(version, '2006-08-17') && isLower(version, '2006-08-29')) {
     if (age === 'child') {
       eventMessages.push('SPORT PARTY', 'sports event', 'playing sports', 'sports are fun');
     } else if (age === 'preteen') {
@@ -1442,7 +1442,7 @@ function getEventDialogue(version: Version, age: BotAge): string[] {
     }
   }
   
-  // Lighthouse Party (Sep 2006)
+  // Lighthouse and Beacon Party (September 21 - October 4, 2006)
   if (isGreaterOrEqual(version, '2006-09-21') && isLower(version, '2006-10-05')) {
     if (age === 'child') {
       eventMessages.push('lighthouse party', 'new lighthouse', 'party at lighthouse', 'beacon party');
@@ -1451,8 +1451,8 @@ function getEventDialogue(version: Version, age: BotAge): string[] {
     }
   }
   
-  // Halloween (Oct 2006)
-  if (isGreaterOrEqual(version, '2006-10-20') && isLower(version, '2006-11-02')) {
+  // Halloween Party (October 19 - November 2, 2006)
+  if (isGreaterOrEqual(version, '2006-10-19') && isLower(version, '2006-11-03')) {
     if (age === 'child') {
       eventMessages.push('HALLOWEEN', 'spooky time', 'halloween party', 'trick or treat', 'scary decorations');
     } else if (age === 'preteen') {
@@ -1462,9 +1462,9 @@ function getEventDialogue(version: Version, age: BotAge): string[] {
     }
   }
   
-  // Christmas/Holiday (Dec 2005-2006)
-  if ((isGreaterOrEqual(version, '2005-12-15') && isLower(version, '2005-12-27')) ||
-      (isGreaterOrEqual(version, '2006-12-15') && isLower(version, '2006-12-27'))) {
+  // Christmas/Holiday Parties (2005 & 2006)
+  if ((isGreaterOrEqual(version, '2005-12-16') && isLower(version, '2005-12-26')) ||
+      (isGreaterOrEqual(version, '2006-12-21') && isLower(version, '2007-01-03'))) {
     if (age === 'child') {
       eventMessages.push('CHRISTMAS', 'holiday party', 'merry christmas', 'santa is here', 'christmas decorations');
     } else if (age === 'preteen') {
@@ -1476,7 +1476,7 @@ function getEventDialogue(version: Version, age: BotAge): string[] {
     }
   }
   
-  // Card-Jitsu Release Party (Nov 2008)
+  // Card-Jitsu Release Party (November 17-24, 2008)
   if (isGreaterOrEqual(version, '2008-11-17') && isLower(version, '2008-11-25')) {
     if (age === 'child') {
       eventMessages.push('CARD JITSU PARTY', 'dojo party', 'ninja party', 'card jitsu event');

@@ -81,6 +81,8 @@ type CatalogItem = {
   isEasterEgg?: boolean; // Easter egg items are rarer
 };
 
+// List all NEW catalog items added at these dates
+// This is to realistically weight what bots can wear
 const CATALOG_ITEMS: { date: string, items: CatalogItem[] }[] = [
   {
     date: '2005-08-01',
@@ -154,6 +156,30 @@ const CATALOG_ITEMS: { date: string, items: CatalogItem[] }[] = [
       { id: 417, name: 'Brown Fedora', type: 'head', wearChance: 0.12 },
     ]
   },
+  {
+    date: '2006-01-01',
+    items: [
+      { id: 237, name: 'Red Suede Jacket', type: 'body', wearChance: 0.18 },
+      { id: 238, name: 'Pastel Suede Jacket', type: 'body', wearChance: 0.14 },
+      { id: 419, name: 'Russian Hat', type: 'head', wearChance: 0.10 },
+      { id: 406, name: 'Pink Ball Cap', type: 'head', wearChance: 0.12 },
+      { id: 253, name: 'Purple Dress', type: 'body', wearChance: 0.16 },
+      { id: 456, name: 'Blue Viking Helmet', type: 'head', wearChance: 0.02, isEasterEgg: true },
+      { id: 420, name: 'Black Toque', type: 'head', wearChance: 0.08 },
+      { id: 421, name: 'Pink Toque', type: 'head', wearChance: 0.08 },
+      { id: 108, name: 'Blue Sunglasses', type: 'face', wearChance: 0.06 },
+    ]
+  },
+  {
+    date: '2006-02-03',
+    items: [
+      { id: 110, name: 'Red Sunglasses', type: 'face', wearChance: 0.06 },
+      { id: 451, name: 'Roman Helmet', type: 'head', wearChance: 0.04 },
+      { id: 422, name: 'Newspaper Hat', type: 'head', wearChance: 0.05 },
+      { id: 175, name: 'Pink Scarf', type: 'neck', wearChance: 0.09 },
+      { id: 174, name: 'Boa', type: 'neck', wearChance: 0.07 },
+    ]
+  },
 ];
 
 // Special case: Party Hat
@@ -191,13 +217,13 @@ function selectBotClothing(version: Version): Partial<Record<string, number>> {
   const availableItems = getAvailableClothing(version);
   
   // Check for party hat special case
-  let partyHatChance = 0.05; // Default: 5% (unobtainable item)
+  let partyHatChance = 0.01; // Default: 1% (unobtainable item)
   if (isGreaterOrEqual(version, '2005-09-21') && !isGreaterOrEqual(version, '2005-09-22')) {
-    // September 21st 2005: 50% chance (during beta test party)
-    partyHatChance = 0.50;
+    // September 21st 2005: 90% chance (during beta test party)
+    partyHatChance = 0.90;
   } else if (isGreaterOrEqual(version, '2005-09-22') && !isGreaterOrEqual(version, '2005-10-24')) {
-    // September 22 - October 23: 25% chance (post-party but pre-release, beta testers had it)
-    partyHatChance = 0.25;
+    // September 22 - October 23: 35% chance (post-party but pre-release, beta testers had it)
+    partyHatChance = 0.35;
   }
   
   if (Math.random() < partyHatChance) {
@@ -262,7 +288,7 @@ function selectWeightedItem(items: CatalogItem[]): CatalogItem | null {
 // Joining server
 handler.xt(Handle.JoinServerOld, (client) => {
   // This is supposed to get the server population of the server the player clicked on
-  // For now, just set the population to 50
+  // For now, just set the population to a fixed count
   const serverPopulation = 50;
   clientServerPopulation.set(client, 50);
 
@@ -634,8 +660,8 @@ function spawnSingleBot(room: any, serverPopulation: number) {
   // Apply iceberg tipping behavior if at iceberg
   applyIcebergTippingBehavior(bot, room, intervals);
   
-  // Kids and preteens are OBSESSED with party hats (beta testers)
-  if ((age === 'child' || age === 'preteen') && !hasBetaHat) {
+  // Kids and preteens are OBSESSED with party hats (beta testers), but only post-beta (>= 2005-10-24)
+  if (isGreaterOrEqual(version, '2005-10-24') && (age === 'child' || age === 'preteen') && !hasBetaHat) {
     applyPartyHatAttractionBehavior(bot, room, intervals, age);
   }
   
@@ -2208,6 +2234,69 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
     }
   }
   
+  // New Year's 2006 (December 29, 2005 - January 1, 2006)
+  if (isGreaterOrEqual(version, '2005-12-29') && isLower(version, '2006-01-02')) {
+    if (dialogueAge === 'child') {
+      timelineMessages.push('HAPPY NEW YEAR!!!', 'ITS 2006!!!', 'countdown was so exciting', 'fireworks everywhere!',
+        '2005 was awesome', 'new year party time', 'year of the puffle?', 'cant wait for 2006!',
+        'midnight countdown was fun', 'new year resolution: be happy!', 'happy new year everyone!');
+    } else if (dialogueAge === 'preteen') {
+      timelineMessages.push('new years eve was epic!', 'countdown to 2006!', 'fireworks show was amazing',
+        '2005 was pretty cool', 'new year party was fun', 'year of the puffle maybe?', 'excited for next year',
+        'midnight fireworks rocked', 'new year resolution time', 'happy new year!');
+    } else if (dialogueAge === 'teen') {
+      timelineMessages.push('new years countdown was cool', '2006 is here!', 'fireworks were nice',
+        '2005 recap: pretty good year', 'new year party was okay', 'year of the puffle?', 'looking forward to 2006',
+        'midnight countdown was fun', 'resolutions for next year', 'happy new year');
+    } else if (dialogueAge === 'adult') {
+      timelineMessages.push('new year celebration was pleasant', '2006 has arrived', 'fireworks display was nice',
+        'reflecting on 2005 positively', 'new year festivities enjoyable', 'year of the puffle perhaps',
+        'anticipating 2006 developments', 'midnight fireworks were lovely', 'new year resolutions made');
+    }
+  }
+  
+  // Newspaper Issue #12 - January 5, 2006
+  if (isGreaterOrEqual(version, '2006-01-05') && isLower(version, '2006-01-12')) {
+    if (dialogueAge === 'child') {
+      timelineMessages.push('OMG NEW GAMES!!!', 'so many more games now!', 'puffles are getting awesome!',
+        'more parties coming soon!', 'member rooms sound cool', 'new necklaces and shoes!', 'accessories are the best!',
+        'check the newspaper now!', 'issue 12 is here!', 'more fun stuff everywhere!');
+    } else if (dialogueAge === 'preteen') {
+      timelineMessages.push('newspaper has tons of new games!', 'puffles getting way better', 'more parties announced!',
+        'members only areas opening', 'new accessories like necklaces!', 'shoes and cool clothing',
+        'check out issue 12!', 'exciting updates!', 'game is growing fast!');
+    } else if (dialogueAge === 'teen') {
+      timelineMessages.push('newspaper issue 12 out!', 'tons of new games added!', 'puffle features expanding!',
+        'more party events coming!', 'members only content!', 'new accessory items!', 'necklaces and shoes!',
+        'good updates!', 'game growing fast!');
+    } else if (dialogueAge === 'adult') {
+      timelineMessages.push('newspaper issue 12 released!', 'significant game expansion!', 'puffle system enhancements!',
+        'increased party content!', 'members only areas!', 'new accessory catalog!', 'necklaces and footwear!',
+        'positive development!', 'community growing!');
+    }
+  }
+  
+  // Newspaper Issue #13 - January 12, 2006
+  if (isGreaterOrEqual(version, '2006-01-12') && isLower(version, '2006-01-19')) {
+    if (dialogueAge === 'child') {
+      timelineMessages.push('poll says DOJO is the BEST!', 'night club is super popular!', 'coffee shop is awesome!',
+        'ice rink is the WORST!', 'want puffle pet shop NOW!', 'swimming place would be FUN!',
+        'more free stuff PLEASE!', 'birthday parties sound AMAZING!', 'check the poll results!');
+    } else if (dialogueAge === 'preteen') {
+      timelineMessages.push('poll results are in issue 13!', 'most love dojo and night club!', 'coffee shop is totally popular!',
+        'ice rink is the least favorite!', 'everyone wants puffle pet shop!', 'swimming area would be epic!',
+        'more free items and secrets!', 'big arcade building sounds awesome!', 'multiplayer games needed!');
+    } else if (dialogueAge === 'teen') {
+      timelineMessages.push('newspaper has player poll results!', 'dojo wins as favorite place!', 'night club second most popular!',
+        'ice rink is least liked!', 'pet shop for puffles is top suggestion!', 'swimming location requested a lot!',
+        'more free stuff and easter eggs wanted!', 'different night club music!', 'mall and bank suggestions!');
+    } else if (dialogueAge === 'adult') {
+      timelineMessages.push('issue 13 contains player poll results!', 'favorite places: dojo, night club, coffee shop!',
+        'least favorite: ice rink, shops, dojo!', 'top suggestion: puffle pet shop!', 'more locations and games requested!',
+        'swimming facility proposed!', 'increased free content desired!', 'arcade, bank, mall suggestions noted!');
+    }
+  }
+  
   return timelineMessages;
 }
 
@@ -2945,8 +3034,9 @@ function applyPartyHatAttractionBehavior(bot: Client, room: any, intervals: Node
     // Find ALL players or bots with a party hat (head item ID 413)
     const partyHatWearers = room.players.filter((p: Client) => p.penguin.head === 413);
     
-    // Check if current target is still valid (in room, still has hat)
-    if (partyHatTarget && (partyHatTarget.room !== room || partyHatTarget.penguin.head !== 413)) {
+    // Check if current target is still valid (still tracked in room, in room, still has hat)
+    const targetStillPresent = partyHatTarget ? partyHatWearers.some((p: Client) => p === partyHatTarget) : false;
+    if (partyHatTarget && (!targetStillPresent || partyHatTarget.room !== room || partyHatTarget.penguin.head !== 413)) {
       partyHatTarget = null;
     }
     
@@ -3007,31 +3097,39 @@ function applyPartyHatAttractionBehavior(bot: Client, room: any, intervals: Node
       return;
     }
     
-    if (partyHatTarget && partyHatTarget.room === room) {
-      const distance = Math.sqrt(
-        Math.pow(partyHatTarget.x - bot.x, 2) + Math.pow(partyHatTarget.y - bot.y, 2)
-      );
-      
-      // Only throw if close enough (within 200 pixels)
-      if (distance < 200) {
-        // 30% chance to throw a snowball
-        if (Math.random() < 0.3) {
-          bot.throwSnowball(String(partyHatTarget.x), String(partyHatTarget.y));
+    if (!partyHatTarget) {
+      return;
+    }
+
+    const targetStillPresent = room.players.some((p: Client) => p === partyHatTarget && p.penguin.head === 413);
+    if (!targetStillPresent || partyHatTarget.room !== room) {
+      partyHatTarget = null;
+      return;
+    }
+
+    const distance = Math.sqrt(
+      Math.pow(partyHatTarget.x - bot.x, 2) + Math.pow(partyHatTarget.y - bot.y, 2)
+    );
+    
+    // Only throw if close enough (within 200 pixels)
+    if (distance < 200) {
+      // 30% chance to throw a snowball
+      if (Math.random() < 0.3) {
+        bot.throwSnowball(String(partyHatTarget.x), String(partyHatTarget.y));
+        
+        // Occasionally throw multiple snowballs in rapid succession (10% chance)
+        if (Math.random() < 0.1) {
+          setTimeout(() => {
+            if (bot.room === room && partyHatTarget && partyHatTarget.room === room) {
+              bot.throwSnowball(String(partyHatTarget.x), String(partyHatTarget.y));
+            }
+          }, 400);
           
-          // Occasionally throw multiple snowballs in rapid succession (10% chance)
-          if (Math.random() < 0.1) {
-            setTimeout(() => {
-              if (bot.room === room && partyHatTarget && partyHatTarget.room === room) {
-                bot.throwSnowball(String(partyHatTarget.x), String(partyHatTarget.y));
-              }
-            }, 400);
-            
-            setTimeout(() => {
-              if (bot.room === room && partyHatTarget && partyHatTarget.room === room) {
-                bot.throwSnowball(String(partyHatTarget.x), String(partyHatTarget.y));
-              }
-            }, 800);
-          }
+          setTimeout(() => {
+            if (bot.room === room && partyHatTarget && partyHatTarget.room === room) {
+              bot.throwSnowball(String(partyHatTarget.x), String(partyHatTarget.y));
+            }
+          }, 800);
         }
       }
     }

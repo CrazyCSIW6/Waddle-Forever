@@ -5,6 +5,7 @@ import { Room } from "../../game-logic/rooms";
 import { CARDS } from "../../../server/game-logic/cards";
 import { RoomName, ROOMS } from "../../../server/game-data/rooms";
 import { randomInt, Vector } from "../../../common/utils";
+import { isAuthorized } from "../play/login";
 import { ArgumentsIndicator, GetArgumentsType, Handle } from "../handles";
 import { logdebug } from "../../../server/logger";
 
@@ -40,6 +41,10 @@ class CommandsHandler {
         const keyword = commandMatch[1];
         const callbacks = commands.get(keyword);
         if (callbacks !== undefined) {
+          if (!isAuthorized(client.penguin.name)) {
+            client.sendError(610, 'You are not authorized to use commands.');
+            return;
+          }
           const args = commandMatch[2].split(/\s+/).slice(1);
           callbacks.forEach(callback => callback(client, ...args));
         } else {

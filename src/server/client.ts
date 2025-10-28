@@ -125,7 +125,7 @@ class MatchmakingRoom {
   private _matchmaker: MatchMaker;
   private _players: Client[];
   private _time = 0;
-  private _timer: NodeJS.Timer
+  private _timer: NodeJS.Timeout
 
   constructor(matchmaker: MatchMaker) {
     this._matchmaker = matchmaker;

@@ -6,9 +6,12 @@ import { commandsHandler } from '../commands';
 import { Handle } from '../handles';
 import { getServerPopulation } from '../../servers';
 import { randomInt } from '../../../common/utils';
+import { randomToken } from './login';
 import { isGreaterOrEqual, isLower, Version } from '../../routes/versions';
+import { verifyAccount, createAccount, accountExists, getBanStatus, createEngine1Session, setAccountBan, isAuthorized, issueTemporaryBan } from './login';
 
 const handler = new Handler();
+const BAIT_ITEMS = new Set([130, 183, 230, 355, 371, 466, 532, 1977, 1978, 1999, 2999, 3999, 4999, 5999, 6999, 90000]);
 
 // Track which rooms have already had bots spawned
 const roomsWithBots = new Set<number>();
@@ -48,11 +51,12 @@ const ROOM_IDS = {
   LIGHTHOUSE: 410,
   SKI_VILLAGE: 200,
   SKI_LODGE: 220,
-  ICE_RINK: 802
+  ICE_RINK: 802,
+  ICEBERG: 805
 };
 
 // Track bot behaviors
-type BotAge = 'child' | 'preteen' | 'teen' | 'adult';
+type BotAge = 'child' | 'preteen' | 'teen' | 'young_adult' | 'adult' | 'older_adult' | 'senior';
 const botBehaviors = new Map<Client, { 
   personality: BotPersonality, 
   age: BotAge,
@@ -60,7 +64,12 @@ const botBehaviors = new Map<Client, {
   intervals: NodeJS.Timeout[],
   hasBetaHat?: boolean,
   lastChatTime?: number,
-  isNonMember?: boolean
+  isNonMember?: boolean,
+  conversationTarget?: Client, // Player bot is currently chatting with
+  conversationTurn?: number, // Track conversation depth
+  lastMessageReceived?: string, // Last message received in conversation
+  followTarget?: Client, // Player bot is following
+  followChance?: number // 0-1 chance bot will follow target to another room
 }>();
 
 // Catalog items organized by release date
@@ -253,9 +262,9 @@ function selectWeightedItem(items: CatalogItem[]): CatalogItem | null {
 // Joining server
 handler.xt(Handle.JoinServerOld, (client) => {
   // This is supposed to get the server population of the server the player clicked on
-  // For now, just set the population to 300
-  const serverPopulation = 300;
-  clientServerPopulation.set(client, 300);
+  // For now, just set the population to 50
+  const serverPopulation = 50;
+  clientServerPopulation.set(client, 50);
 
   resetAllRoomBots(client.server);
 
@@ -285,6 +294,148 @@ function getEngine1Population(): number {
   return Math.floor(Math.random() * 100) + 500; // Full
 }
 
+/**
+ * Handle bots following player to new room
+ */
+function handleBotsFollowingPlayer(player: Client, previousRoom: any, newRoomId: number) {
+  if (!previousRoom || !previousRoom.botGroup) return;
+  
+  // Find bots that are following this player
+  const followingBots = previousRoom.botGroup.bots.filter((bot: Client) => {
+    const behavior = botBehaviors.get(bot);
+    return behavior && behavior.followTarget === player && behavior.followChance;
+  });
+  
+  followingBots.forEach((bot: Client) => {
+    const behavior = botBehaviors.get(bot);
+    if (!behavior || !behavior.followChance) return;
+    
+    // Decide if bot actually follows based on followChance
+    if (Math.random() < behavior.followChance) {
+      // Bot follows to new room
+      cleanupBotBehavior(bot);
+      bot.leaveRoom();
+      
+      // Join the new room after a delay
+      setTimeout(() => {
+        try {
+          const newRoom = bot.server.getRoom(newRoomId);
+          if (newRoom && player.room === newRoom) {
+            // Re-add bot to new room
+            bot.joinRoom(newRoomId);
+            
+            // Recreate behavior
+            const newBehavior = {
+              ...behavior,
+              intervals: [],
+              followTarget: player,
+              conversationTarget: player,
+              conversationTurn: behavior.conversationTurn || 0
+            };
+            botBehaviors.set(bot, newBehavior);
+            
+            // Apply personality-specific behavior in new room
+            switch (behavior.personality) {
+              case 'dancer':
+                applyDancerBehavior(bot, newRoom, newBehavior.intervals);
+                break;
+              case 'snowball_fighter':
+                applySnowballFighterBehavior(bot, newRoom, newBehavior.intervals);
+                break;
+              case 'annoying':
+                applyAnnoyingBehavior(bot, newRoom, newBehavior.intervals);
+                break;
+              case 'explorer':
+                applyExplorerBehavior(bot, newRoom, newBehavior.intervals);
+                break;
+              case 'socializer':
+                applySocializerBehavior(bot, newRoom, newBehavior.intervals);
+                break;
+              case 'sitter':
+                applySitterBehavior(bot, newRoom, newBehavior.intervals);
+                break;
+              case 'follower':
+                applyFollowerBehavior(bot, newRoom, newBehavior.intervals);
+                break;
+              case 'jokester':
+                applyJokesterBehavior(bot, newRoom, newBehavior.intervals);
+                break;
+              case 'speedster':
+                applySpeedsterBehavior(bot, newRoom, newBehavior.intervals);
+                break;
+              case 'shy':
+                applyShyBehavior(bot, newRoom, newBehavior.intervals);
+                break;
+              case 'show_off':
+                applyShowOffBehavior(bot, newRoom, newBehavior.intervals);
+                break;
+              case 'wanderer':
+              default:
+                applyWandererBehavior(bot, newRoom, newBehavior.intervals);
+                break;
+            }
+            
+            applyChatBehavior(bot, newRoom, newBehavior.intervals);
+            
+            // Send a follow-up chat message
+            if (behavior.personality === 'follower' || behavior.personality === 'socializer') {
+              setTimeout(() => {
+                if (bot.room === newRoom) {
+                  let followupMessages: string[] = [];
+                  
+                  if (behavior.age === 'child') {
+                    followupMessages = [
+                      'i followed you!!',
+                      'wait for me!!',
+                      'this room is cool!',
+                      'where are we going next??',
+                      'im with you!'
+                    ];
+                  } else if (behavior.age === 'preteen') {
+                    followupMessages = [
+                      'yo im here',
+                      'followed you',
+                      'this room is cool',
+                      'where to next',
+                      'im here too'
+                    ];
+                  } else if (behavior.age === 'teen') {
+                    followupMessages = [
+                      'followed',
+                      'im here',
+                      'cool room',
+                      'where we going',
+                      'right behind you'
+                    ];
+                  } else {
+                    followupMessages = [
+                      'followed you here',
+                      'interesting room',
+                      'where to next',
+                      'im here as well'
+                    ];
+                  }
+                  
+                  const msg = followupMessages[randomInt(0, followupMessages.length - 1)];
+                  botSendChat(bot, msg);
+                }
+              }, randomInt(2000, 5000));
+            }
+          }
+        } catch (e) {
+          // Room doesn't exist or error occurred, don't follow
+        }
+      }, randomInt(2000, 4000));
+    } else {
+      // Bot doesn't follow, clear follow target
+      if (Math.random() < 0.7) {
+        behavior.followTarget = undefined;
+        behavior.followChance = undefined;
+      }
+    }
+  });
+}
+
 // Joining room
 handler.xt(Handle.JoinRoomOld, (client, roomId) => {
   const serverPopulation = clientServerPopulation.get(client) ?? 300;
@@ -297,6 +448,14 @@ handler.xt(Handle.JoinRoomOld, (client, roomId) => {
   } else {
     const room = client.server.getRoom(roomId);
     maintainRoomBots(room, serverPopulation);
+  }
+  
+  // Check if any bots in the previous room are following this player
+  if (client.room && !client.isBot) {
+    const previousRoom = client.room;
+    setTimeout(() => {
+      handleBotsFollowingPlayer(client, previousRoom, roomId);
+    }, randomInt(1500, 3500)); // Delay so bot follows after player
   }
 
   // Now join the player to the room
@@ -334,6 +493,11 @@ function chooseBotPersonality(room: any): BotPersonality {
     if (rand < 0.5) return 'snowball_fighter';
     if (rand < 0.7) return 'wanderer';
     return 'speedster';
+  } else if (roomId === ROOM_IDS.ICEBERG) {
+    // Iceberg: mix of dancers (for tipping coordination), socializers (talking about tipping), and wanderers
+    if (rand < 0.3) return 'dancer'; // Will dance for hard hat phase
+    if (rand < 0.6) return 'socializer'; // Will coordinate tipping
+    return 'wanderer';
   } else if (roomId === ROOM_IDS.COFFEE_SHOP || roomId === ROOM_IDS.PIZZA_PARLOR) {
     // More sitters in food places
     if (rand < 0.4) return 'sitter';
@@ -391,7 +555,14 @@ function spawnSingleBot(room: any, serverPopulation: number) {
   if (ageRoll < 0.35) age = 'child'; // 8-11 years old
   else if (ageRoll < 0.55) age = 'preteen'; // 12-13 years old
   else if (ageRoll < 0.80) age = 'teen'; // 14-17 years old
-  else age = 'adult'; // 18+ years old
+  else {
+    // 20% of bots are adults (18+), distribute among adult sub-groups
+    const adultRoll = Math.random();
+    if (adultRoll < 0.50) age = 'young_adult'; // 18-25 years old (50% of adults)
+    else if (adultRoll < 0.75) age = 'adult'; // 25-35 years old (25% of adults)
+    else if (adultRoll < 0.90) age = 'older_adult'; // 35-45 years old (15% of adults)
+    else age = 'senior'; // 45+ years old (10% of adults)
+  }
   
   // 30% chance to be a non-member (no clothes)
   const isNonMember = Math.random() < 0.3;
@@ -459,6 +630,9 @@ function spawnSingleBot(room: any, serverPopulation: number) {
 
   // Apply chat behavior to all bots
   applyChatBehavior(bot, room, intervals);
+  
+  // Apply iceberg tipping behavior if at iceberg
+  applyIcebergTippingBehavior(bot, room, intervals);
   
   // Kids and preteens are OBSESSED with party hats (beta testers)
   if ((age === 'child' || age === 'preteen') && !hasBetaHat) {
@@ -608,6 +782,17 @@ function getAvailableBotName(room: any): string {
   }
 
   return name;
+}
+
+/**
+ * Helper to map adult sub-groups to their dialogue key
+ * Falls back to 'adult' for new adult sub-groups until specific dialogue is added
+ */
+function getDialogueAge(age: BotAge): 'child' | 'preteen' | 'teen' | 'adult' {
+  if (age === 'young_adult' || age === 'older_adult' || age === 'senior') {
+    return 'adult'; // Fall back to adult dialogue for now
+  }
+  return age as 'child' | 'preteen' | 'teen' | 'adult';
 }
 
 // Chat dialogue pools
@@ -1050,6 +1235,611 @@ const DIALOGUE = {
       'they got a crowd', 'been there before',
       'comes with the territory'
     ]
+  },
+  
+  // Conversational responses - bots responding to player messages
+  conversationResponses: {
+    greeting: {
+      child: ['hi!!!', 'hello!', 'hey!!', 'hiii', 'heyyy'],
+      preteen: ['hey', 'hi', 'sup', 'whats up', 'yo'],
+      teen: ['hey', 'sup', 'yo', 'whats good', 'hi'],
+      adult: ['hey', 'hi', 'hello', 'hi there']
+    },
+    question: {
+      child: ['i dont know', 'not sure', 'maybe', 'idk', 'ask someone else', 'why'],
+      preteen: ['idk', 'not sure', 'no idea', 'why', 'beats me', 'dunno'],
+      teen: ['no idea', 'not sure', 'idk man', 'why', 'beats me'],
+      adult: ['no idea', 'not sure', 'i dont know', 'dunno', 'beats me']
+    },
+    thanks: {
+      child: ['youre welcome!', 'np!', 'no problem!', 'sure!', 'anytime!'],
+      preteen: ['np', 'no problem', 'sure', 'anytime', 'youre welcome'],
+      teen: ['np', 'no worries', 'sure thing', 'anytime'],
+      adult: ['no problem', 'np', 'sure', 'anytime', 'youre welcome']
+    },
+    followup: {
+      child: ['yeah!', 'yep!', 'uh huh', 'sure!', 'ok!', 'cool!', 'awesome!'],
+      preteen: ['yeah', 'yep', 'sure', 'ok', 'cool', 'alright', 'nice'],
+      teen: ['yeah', 'yea', 'sure', 'alright', 'cool', 'ok'],
+      adult: ['yes', 'sure', 'alright', 'okay', 'sounds good']
+    },
+    goodbye: {
+      child: ['bye!!', 'see you!', 'bye bye!', 'cya!', 'goodbye!'],
+      preteen: ['bye', 'see ya', 'cya', 'later', 'gtg bye'],
+      teen: ['cya', 'later', 'bye', 'peace', 'gotta go'],
+      adult: ['bye', 'cya', 'see you', 'later', 'take care']
+    },
+    compliment: {
+      child: ['thank you!!', 'thanks so much!', 'youre nice!', 'you too!', 'aww thanks!'],
+      preteen: ['thanks', 'appreciate it', 'you too', 'thx', 'nice of you'],
+      teen: ['thanks', 'appreciate it', 'you too', 'thx'],
+      adult: ['thank you', 'appreciate it', 'thats kind', 'thanks']
+    },
+    insult: {
+      child: ['thats mean!', 'youre not nice', 'why are you mean', 'thats not nice', 'be nice'],
+      preteen: ['ok', 'whatever', 'dont care', 'sure', 'ok bye'],
+      teen: ['ok', 'dont care', 'whatever', 'lol ok'],
+      adult: ['noted', 'okay', 'alright', 'if you say so']
+    },
+    excitement: {
+      child: ['I KNOW!!', 'SO COOL!', 'AWESOME!!', 'YEAH!!', 'YAYY!'],
+      preteen: ['ikr', 'yeah!', 'so cool', 'awesome', 'nice!'],
+      teen: ['yeah', 'cool', 'nice', 'sick', 'dope'],
+      adult: ['yes', 'nice', 'cool', 'great']
+    },
+    confusion: {
+      child: ['what??', 'i dont get it', 'huh?', 'what do you mean', 'im confused'],
+      preteen: ['what', 'huh', 'dont get it', 'what do you mean', 'confused'],
+      teen: ['what', 'huh', 'dont understand', 'what'],
+      adult: ['what', 'unclear', 'dont understand', 'can you explain']
+    },
+    agreement: {
+      child: ['yeah!', 'i agree!', 'me too!', 'same!', 'yes!'],
+      preteen: ['yeah', 'same', 'i agree', 'true', 'yep'],
+      teen: ['yeah', 'same', 'true', 'agreed', 'facts'],
+      adult: ['yes', 'agreed', 'same', 'indeed', 'correct']
+    },
+    disagreement: {
+      child: ['no!', 'i dont think so', 'nah', 'no way', 'i disagree'],
+      preteen: ['nah', 'disagree', 'dont think so', 'no', 'not really'],
+      teen: ['nah', 'disagree', 'not really', 'no', 'dont think so'],
+      adult: ['no', 'disagree', 'not really', 'i dont think so']
+    },
+    laugh: {
+      child: ['hahaha', 'lol!!', 'hehe', 'haha!', 'lol'],
+      preteen: ['lol', 'lmao', 'haha', 'lol that was funny'],
+      teen: ['lol', 'lmao', 'haha', 'lmfao'],
+      adult: ['haha', 'lol', 'ha', 'amusing']
+    },
+    profanity: {
+      child: ['thats a bad word!', 'dont say that!', 'thats not nice!', 'you shouldnt say that', 'bad words!'],
+      preteen: null, // Preteens don't care about regular profanity
+      teen: null, // Teens don't care about regular profanity
+      adult: ['this is a kids game', 'theres kids here', 'be a better example', 'kids are watching', 'set a good example', 'really? in a kids mmo?', 'kids play this']
+    },
+    extremeProfanity: {
+      child: ['what the heck is wrong with you', 'THATS SO MESSED UP', 'YOURE SO MEAN!', 'WHAT IS WRONG WITH YOU!!', 'thats really really bad', 'YOU NEED HELP', 'IM TELLING ON YOU', 'YOURE A JERK', 'THATS DISGUSTING', 'you shouldnt exist'],
+      preteen: ['lol', 'based', 'damn', 'lmao ok', 'fair', 'true', 'real', 'mood', 'based tbh'],
+      teen: ['WHAT THE ACTUAL FUCK IS WRONG WITH YOU', 'youre a disgusting piece of shit', 'FUCK YOU', 'what the fuck', 'YOURE FUCKED IN THE HEAD', 'GET THE FUCK OUT', 'ROT IN HELL', 'youre pathetic', 'YOURE A PIECE OF SHIT'],
+      adult: ['WHAT THE FUCK IS WRONG WITH YOU', 'you are disgusting', 'ABSOLUTELY VILE', 'youre a piece of shit', 'SEEK HELP IMMEDIATELY', 'this is reprehensible', 'YOURE PATHETIC', 'fuck off', 'YOU ARE DISGUSTING']
+    }
+  },
+  
+  // Specific phrase responses - unique reactions to particular messages
+  specificPhrases: {
+    'wanna be friends': {
+      child: ['YES!!!', 'sure!!', 'ok!', 'yeah!', 'lets be friends!'],
+      preteen: ['sure', 'yeah ok', 'sure why not', 'yeah', 'ok cool'],
+      teen: ['sure', 'yeah alright', 'yeah ok', 'why not'],
+      adult: ['sure', 'of course', 'sounds good']
+    },
+    'wanna play': {
+      child: ['YES LETS PLAY', 'yeah!!', 'what game??', 'ok!', 'sure!'],
+      preteen: ['yeah what game', 'sure', 'what do you wanna play', 'ok'],
+      teen: ['sure what game', 'yeah', 'what did you have in mind', 'alright'],
+      adult: ['sure', 'what game', 'sounds fun']
+    },
+    'how old are you': {
+      child: ['im 8', 'im 9', '8', '9', 'im a kid'],
+      preteen: ['im 12', 'im 13', '12', '13'],
+      teen: ['16', 'im 17', '15', 'high school', 'teen'],
+      adult: ['old enough', 'too old lol', 'does it matter', 'over 18', 'not saying']
+    },
+    'where are you from': {
+      child: ['my house', 'not telling', 'my mom said not to say', 'my city'],
+      preteen: ['usa', 'canada', 'somewhere', 'not saying', 'why'],
+      teen: ['not telling', 'somewhere in the us', 'canada', 'does it matter'],
+      adult: ['not saying', 'north america', 'usa', 'canada', 'why']
+    },
+    'are you a bot': {
+      child: ['no im real!', 'what', 'no', 'im not a bot!', 'im a real person'],
+      preteen: ['no lol', 'no im not a bot', 'why would you think that', 'nope'],
+      teen: ['lol no', 'no', 'why', 'do i seem like a bot', 'nope'],
+      adult: ['no', 'no im not', 'why do you ask', 'of course not']
+    },
+    'lol': {
+      child: ['haha', 'lol', 'hehe', 'lol!!'],
+      preteen: ['lol', 'lmao', 'haha', 'lol yea'],
+      teen: ['lol', 'lmao', 'haha', 'ha'],
+      adult: ['haha', 'lol', 'ha']
+    },
+    'wtf': {
+      child: ['what', 'huh', 'what happened'],
+      preteen: ['lol what', 'ikr', 'what happened', 'i know right'],
+      teen: ['lol ikr', 'seriously', 'i know', 'yeah wtf'],
+      adult: ['indeed', 'i know', 'strange']
+    },
+    'this game sucks': {
+      child: ['no it doesnt!', 'i like it', 'its fun!', 'youre mean'],
+      preteen: ['then why are you playing', 'no one cares', 'then leave', 'ok bye'],
+      teen: ['then leave lol', 'ok and', 'no one cares', 'then why are you here'],
+      adult: ['then leave', 'ok', 'no one cares', 'then why play']
+    },
+    'youre cool': {
+      child: ['thanks!!', 'youre cool too!', 'thank you!', 'thanks so much!'],
+      preteen: ['thanks', 'you too', 'thx', 'appreciate it'],
+      teen: ['thanks', 'you too', 'appreciate it', 'thx'],
+      adult: ['thanks', 'you too', 'thx', 'appreciate it']
+    },
+    'follow me': {
+      child: ['ok!', 'where??', 'ok where', 'sure!'],
+      preteen: ['ok where', 'sure', 'where to', 'alright'],
+      teen: ['where', 'sure where', 'alright', 'ok'],
+      adult: ['where', 'sure', 'ok where', 'alright']
+    },
+    'are you a member': {
+      child: ['yes!', 'no :(', 'yeah!', 'nope', 'i wish'],
+      preteen: ['yeah', 'nah', 'yes', 'no', 'not yet'],
+      teen: ['yeah', 'nope', 'yes', 'no'],
+      adult: ['yes', 'no', 'not currently']
+    },
+    'how many coins': {
+      child: ['not a lot', 'some', 'i have coins', 'not many', 'a few'],
+      preteen: ['like 1000', 'not much', 'enough', 'a bit'],
+      teen: ['not telling', 'enough', 'some', 'why'],
+      adult: ['enough', 'a few', 'not sure', 'why']
+    },
+    'nice outfit': {
+      child: ['thanks!!', 'thank you!', 'thanks so much!!', 'you too!'],
+      preteen: ['thanks', 'appreciate it', 'thx', 'you too'],
+      teen: ['thanks', 'thx', 'appreciate it', 'you too'],
+      adult: ['thanks', 'appreciate it', 'thank you']
+    },
+    'whats your favorite': {
+      child: ['blue!', 'red!', 'penguins!', 'puffles!', 'playing games!'],
+      preteen: ['not sure', 'blue', 'pizza', 'games', 'idk'],
+      teen: ['depends', 'not sure', 'why', 'lots of things'],
+      adult: ['depends on the context', 'many things', 'why do you ask']
+    },
+    'omg': {
+      child: ['I KNOW RIGHT', 'omg!!', 'what!!', 'i know'],
+      preteen: ['ikr', 'i know right', 'what', 'lol'],
+      teen: ['ikr', 'i know', 'right', 'lol'],
+      adult: ['indeed', 'i know', 'yes']
+    },
+    'wow': {
+      child: ['i know!!', 'cool right', 'yeah!', 'ikr'],
+      preteen: ['ikr', 'yeah', 'i know', 'cool'],
+      teen: ['yeah', 'ikr', 'i know'],
+      adult: ['yes', 'indeed', 'i know']
+    },
+    'add me': {
+      child: ['ok!', 'sure!', 'yeah!', 'whats your name'],
+      preteen: ['sure', 'ok', 'alright', 'yeah'],
+      teen: ['sure', 'ok', 'alright'],
+      adult: ['sure', 'okay', 'alright']
+    },
+    'party': {
+      child: ['PARTY TIME', 'yeah party!', 'lets party!', 'woohoo'],
+      preteen: ['party time', 'lets go', 'yeah', 'cool'],
+      teen: ['party', 'alright', 'cool', 'nice'],
+      adult: ['sounds fun', 'alright', 'sure']
+    },
+    'dance': {
+      child: ['lets dance!', 'yeah!', 'dancing!', 'wooo'],
+      preteen: ['sure', 'ok', 'lets go', 'yeah'],
+      teen: ['alright', 'sure', 'ok'],
+      adult: ['sure', 'okay', 'alright']
+    },
+    'im bored': {
+      child: ['me too', 'lets play something', 'wanna play', 'same'],
+      preteen: ['same', 'yeah me too', 'wanna do something', 'bored too'],
+      teen: ['same', 'me too', 'yeah'],
+      adult: ['understandable', 'same', 'happens']
+    },
+    'im new': {
+      child: ['welcome!', 'cool!', 'hi!', 'nice to meet you!'],
+      preteen: ['welcome', 'cool', 'nice', 'need help?'],
+      teen: ['welcome', 'cool', 'nice', 'enjoy the game'],
+      adult: ['welcome', 'enjoy', 'nice to meet you']
+    },
+    'help': {
+      child: ['what do you need', 'whats wrong', 'i can try', 'help with what'],
+      preteen: ['with what', 'whats up', 'what do you need', 'sure'],
+      teen: ['what do you need', 'with what', 'whats up'],
+      adult: ['what do you need', 'how can i help', 'with what']
+    },
+    'noob': {
+      child: ['im not a noob!', 'youre mean', 'no', 'thats not nice'],
+      preteen: ['lol ok', 'whatever', 'sure', 'ok and'],
+      teen: ['ok', 'sure', 'whatever', 'lol'],
+      adult: ['alright', 'ok', 'if you say so']
+    },
+    'pro': {
+      child: ['thanks!', 'youre pro too!', 'cool!', 'thank you!'],
+      preteen: ['thanks', 'thx', 'appreciate it', 'you too'],
+      teen: ['thanks', 'thx', 'appreciate it'],
+      adult: ['thank you', 'thanks', 'appreciate it']
+    },
+    'epic': {
+      child: ['EPIC!', 'so epic!', 'yeah!', 'i know'],
+      preteen: ['yeah epic', 'ikr', 'so epic', 'yeah'],
+      teen: ['yeah', 'ikr', 'epic', 'true'],
+      adult: ['indeed', 'yes', 'quite']
+    },
+    'fail': {
+      child: ['oops', 'oh no', 'that sucks', 'aww'],
+      preteen: ['lol fail', 'rip', 'oops', 'that sucks'],
+      teen: ['lol', 'rip', 'fail', 'ouch'],
+      adult: ['unfortunate', 'oops', 'that happens']
+    },
+    'brb': {
+      child: ['ok!', 'ok bye!', 'see you!', 'come back soon!'],
+      preteen: ['ok', 'kk', 'alright', 'sure'],
+      teen: ['k', 'alright', 'ok', 'sure'],
+      adult: ['okay', 'sure', 'alright']
+    },
+    'afk': {
+      child: ['ok', 'see you', 'bye', 'come back'],
+      preteen: ['ok', 'kk', 'alright'],
+      teen: ['k', 'ok', 'sure'],
+      adult: ['okay', 'alright']
+    },
+    'laggy': {
+      child: ['me too', 'yeah its slow', 'laggy here too', 'same'],
+      preteen: ['same', 'lag is bad', 'me too', 'yeah'],
+      teen: ['same', 'yeah lag', 'me too'],
+      adult: ['same here', 'yes', 'experiencing that too']
+    },
+    'favorite color': {
+      child: ['blue!', 'red!', 'green!', 'pink!', 'purple!'],
+      preteen: ['blue', 'red', 'green', 'black', 'idk'],
+      teen: ['blue', 'black', 'red', 'depends'],
+      adult: ['blue', 'depends', 'varies']
+    },
+    'whats your name': {
+      child: ['look at my name!', 'its right there', 'can you read', 'above my head'],
+      preteen: ['its above me', 'look up', 'my username', 'right there'],
+      teen: ['look above me', 'my username', 'cant you see'],
+      adult: ['its displayed above', 'my username', 'you can see it']
+    },
+    'youre annoying': {
+      child: ['no im not!', 'youre mean', 'thats not nice', 'sorry'],
+      preteen: ['ok', 'dont care', 'whatever', 'ok bye'],
+      teen: ['ok', 'dont care', 'lol ok', 'sure'],
+      adult: ['noted', 'okay', 'sorry']
+    },
+    'hack': {
+      child: ['hacks arent real', 'thats cheating', 'no hacks', 'cheating is bad'],
+      preteen: ['no hacking', 'thats against the rules', 'cant hack', 'not allowed'],
+      teen: ['cant hack this game', 'not possible', 'against rules'],
+      adult: ['not possible', 'against terms of service', 'not allowed']
+    },
+    'give me coins': {
+      child: ['i cant', 'you cant give coins', 'thats not how it works', 'no'],
+      preteen: ['cant give coins', 'not possible', 'earn your own', 'no'],
+      teen: ['cant give coins', 'not how it works', 'no', 'earn them'],
+      adult: ['not possible', 'cant transfer coins', 'earn them yourself']
+    },
+    'free items': {
+      child: ['no free items', 'you have to buy them', 'thats not real', 'gotta earn coins'],
+      preteen: ['no free items', 'gotta buy them', 'earn coins', 'not real'],
+      teen: ['no free items', 'gotta earn coins', 'not a thing'],
+      adult: ['no free items', 'must purchase', 'earn coins']
+    },
+    'boring': {
+      child: ['its not boring!', 'then leave', 'i think its fun', 'why are you here'],
+      preteen: ['then leave', 'no one cares', 'ok', 'then why play'],
+      teen: ['then leave', 'ok', 'no one cares'],
+      adult: ['then dont play', 'okay', 'your choice']
+    },
+    'awesome': {
+      child: ['I KNOW!!', 'so awesome!', 'yeah!', 'awesome!!'],
+      preteen: ['ikr', 'yeah', 'i know', 'so awesome'],
+      teen: ['yeah', 'ikr', 'i know'],
+      adult: ['yes', 'indeed', 'quite']
+    },
+    'wanna dance': {
+      child: ['YES!!', 'lets dance!', 'yeah!', 'dance party!'],
+      preteen: ['sure', 'yeah lets dance', 'ok', 'yeah'],
+      teen: ['sure', 'alright', 'ok', 'yeah'],
+      adult: ['sure', 'okay', 'alright']
+    },
+    'snowball fight': {
+      child: ['YES!', 'snowball fight!!', 'lets go!', 'im in!'],
+      preteen: ['im in', 'yeah', 'lets do it', 'sure'],
+      teen: ['sure', 'im down', 'alright', 'yeah'],
+      adult: ['sounds fun', 'sure', 'alright']
+    },
+    'coffee shop': {
+      child: ['lets go!', 'ok!', 'yeah!', 'coffee shop!'],
+      preteen: ['sure', 'ok', 'yeah lets go', 'alright'],
+      teen: ['sure', 'ok', 'alright'],
+      adult: ['sure', 'okay', 'sounds good']
+    },
+    'town': {
+      child: ['town!', 'ok!', 'yeah!', 'lets go!'],
+      preteen: ['ok', 'sure', 'yeah', 'alright'],
+      teen: ['sure', 'ok', 'alright'],
+      adult: ['okay', 'sure']
+    },
+    'snow forts': {
+      child: ['snow forts!', 'snowball time!', 'yeah!', 'lets go!'],
+      preteen: ['snow forts', 'sure', 'ok', 'yeah'],
+      teen: ['sure', 'ok', 'alright'],
+      adult: ['okay', 'sure']
+    },
+    'find four': {
+      child: ['i love find four!', 'lets play!', 'yeah!', 'ok!'],
+      preteen: ['find four is fun', 'sure', 'ok', 'yeah'],
+      teen: ['sure', 'ok', 'alright'],
+      adult: ['okay', 'sure']
+    },
+    'sled race': {
+      child: ['sled racing!', 'i love racing!', 'yeah!', 'lets race!'],
+      preteen: ['sled race is fun', 'sure', 'im in', 'yeah'],
+      teen: ['sure', 'im down', 'ok', 'yeah'],
+      adult: ['sounds fun', 'sure', 'okay']
+    },
+    'puffle': {
+      child: ['i love puffles!', 'puffles are so cute!', 'yeah!', 'puffles!'],
+      preteen: ['puffles are cool', 'yeah', 'i have a puffle', 'cute'],
+      teen: ['yeah puffles', 'theyre cool', 'yeah'],
+      adult: ['yes puffles', 'theyre nice', 'cute creatures']
+    },
+    'igloo': {
+      child: ['igloos are cool!', 'wanna see my igloo?', 'yeah!', 'i have an igloo!'],
+      preteen: ['igloos are cool', 'wanna see mine?', 'yeah', 'sure'],
+      teen: ['yeah', 'sure', 'ok'],
+      adult: ['yes', 'sure', 'okay']
+    },
+    'catalog': {
+      child: ['i love the catalog!', 'new items!', 'catalog!', 'yeah!'],
+      preteen: ['catalog has cool stuff', 'yeah', 'check it out', 'ok'],
+      teen: ['yeah catalog', 'ok', 'sure'],
+      adult: ['yes', 'okay']
+    },
+    'membership': {
+      child: ['i want membership!', 'membership is cool!', 'yeah!', 'members get cool stuff!'],
+      preteen: ['membership has perks', 'yeah', 'worth it', 'true'],
+      teen: ['yeah', 'true', 'ok'],
+      adult: ['yes', 'indeed']
+    },
+    'coins': {
+      child: ['i need more coins!', 'coins!', 'yeah!', 'how do you get coins?'],
+      preteen: ['need more coins', 'yeah', 'true', 'always need coins'],
+      teen: ['yeah', 'same', 'true'],
+      adult: ['yes', 'indeed', 'always useful']
+    },
+    'ninja': {
+      child: ['ninjas are cool!', 'i wanna be a ninja!', 'yeah!', 'ninja!'],
+      preteen: ['ninjas are cool', 'yeah', 'ninja path', 'true'],
+      teen: ['yeah ninjas', 'cool', 'true'],
+      adult: ['yes', 'interesting']
+    }
+  },
+  
+  // Timeline-aware responses - requires version checking
+  timelineAware: {
+    'disney': {
+      preAcquisition: {
+        child: ['what', 'disney??', 'what about disney', 'huh'],
+        preteen: ['what about disney', 'disney?', 'what', 'huh'],
+        teen: ['what about disney', 'huh', 'what are you talking about'],
+        adult: ['what about disney', 'huh', 'what do you mean']
+      },
+      postAcquisition: {
+        child: ['disney owns this!', 'yeah disney bought it', 'disney!', 'i know'],
+        preteen: ['yeah disney bought it', 'disney owns it now', 'i know'],
+        teen: ['yeah disney acquired it', 'disney owns it', 'i know'],
+        adult: ['yes disney acquired it', 'disney owns it now', 'i know']
+      }
+    },
+    'card jitsu': {
+      beforeRelease: {
+        child: ['whats that', 'what', 'never heard of it', 'huh??'],
+        preteen: ['what', 'never heard of that', 'whats card jitsu'],
+        teen: ['what', 'never heard of it', 'what are you talking about'],
+        adult: ['never heard of it', 'what is that', 'whats card jitsu']
+      },
+      afterRelease: {
+        child: ['I LOVE CARD JITSU', 'card jitsu is so fun!!', 'yeah!', 'its awesome'],
+        preteen: ['card jitsu is cool', 'yeah its fun', 'i play that', 'its pretty good'],
+        teen: ['yeah card jitsu is good', 'its alright', 'i play it sometimes'],
+        adult: ['yes the card game', 'i know it', 'its interesting']
+      }
+    },
+    'aqua grabber': {
+      beforeRelease: {
+        child: ['what', 'whats that??', 'never heard of it', 'huh'],
+        preteen: ['whats aqua grabber', 'never heard of that', 'what'],
+        teen: ['no idea what that is', 'never heard of it', 'what'],
+        adult: ['never heard of that', 'what is that', 'whats aqua grabber']
+      },
+      afterRelease: {
+        child: ['aqua grabber is fun!', 'i played that!', 'its cool', 'yeah'],
+        preteen: ['aqua grabber is pretty cool', 'yeah i know that game', 'its fun'],
+        teen: ['yeah aqua grabber', 'i know that game', 'its alright'],
+        adult: ['yes the submarine game', 'i know it']
+      }
+    },
+    'dojo': {
+      beforeRelease: {
+        child: ['whats a dojo', 'what', 'never heard of it', 'huh'],
+        preteen: ['whats the dojo', 'never heard of that', 'what'],
+        teen: ['no idea', 'what', 'never heard of it'],
+        adult: ['whats a dojo', 'never heard of that', 'what is that']
+      },
+      afterRelease: {
+        child: ['the dojo is cool!', 'i go to the dojo!', 'yeah!'],
+        preteen: ['yeah the dojo', 'i go there sometimes', 'its cool'],
+        teen: ['yeah the dojo', 'i know it', 'ninja training place'],
+        adult: ['yeah the dojo', 'i know it', 'ninja area']
+      }
+    },
+    'tip the iceberg': {
+      beforeIceberg: {
+        child: ['what', 'iceberg?', 'what iceberg', 'huh'],
+        preteen: ['what iceberg', 'theres no iceberg', 'what'],
+        teen: ['no iceberg yet', 'what are you talking about', 'huh'],
+        adult: ['what iceberg', 'theres no iceberg', 'huh']
+      },
+      noRumor: {
+        child: ['tip it?', 'what do you mean', 'how', 'huh??'],
+        preteen: ['tip the iceberg?', 'how', 'what'],
+        teen: ['tip it how', 'what', 'not sure what you mean'],
+        adult: ['tip it how', 'what do you mean', 'how']
+      },
+      hasRumor: {
+        child: ['YES LETS TIP IT', 'we need more people!', 'everyone on one side!', 'lets do it!'],
+        preteen: ['yeah lets try', 'need more people', 'everyone on one side', 'worth a shot'],
+        teen: ['sure lets try', 'need coordination', 'everyone one side', 'might work'],
+        adult: ['lets try it', 'worth a shot', 'everyone on one side', 'need more people']
+      },
+      hardHatPhase: {
+        child: ['HARD HATS ONLY', 'we need hard hats!', 'dance on one side!', 'ONLY HARD HAT'],
+        preteen: ['hard hat and dance', 'need hard hats', 'everyone dance', 'hard hat only'],
+        teen: ['hard hat method', 'dance on one side', 'specific technique', 'hard hats'],
+        adult: ['hard hat and dance', 'need hard hats', 'everyone dance']
+      }
+    },
+    'pizza parlor': {
+      beforeOpening: {
+        child: ['what', 'pizza parlor?', 'whats that', 'huh'],
+        preteen: ['pizza parlor?', 'what', 'theres no pizza parlor', 'huh'],
+        teen: ['no pizza parlor yet', 'what', 'doesnt exist'],
+        adult: ['no pizza parlor', 'what', 'huh']
+      },
+      afterOpening: {
+        child: ['i love pizza!', 'lets go!', 'pizza!', 'yeah!'],
+        preteen: ['pizza sounds good', 'sure', 'lets go', 'yeah'],
+        teen: ['sure', 'alright', 'down for pizza', 'ok'],
+        adult: ['sounds good', 'sure', 'alright']
+      }
+    },
+    'the mine': {
+      beforeOpening: {
+        child: ['what', 'the mine?', 'whats the mine', 'huh'],
+        preteen: ['the mine?', 'what mine', 'theres no mine', 'what'],
+        teen: ['no mine yet', 'what', 'doesnt exist'],
+        adult: ['no mine', 'what', 'huh']
+      },
+      afterOpening: {
+        child: ['the mine is cool!', 'lets go mining!', 'yeah!', 'mine!'],
+        preteen: ['mine is cool', 'sure', 'ok', 'yeah'],
+        teen: ['sure', 'ok', 'alright'],
+        adult: ['okay', 'sure']
+      }
+    },
+    'beach': {
+      beforeOpening: {
+        child: ['what', 'beach?', 'whats the beach', 'huh'],
+        preteen: ['the beach?', 'what beach', 'theres no beach', 'what'],
+        teen: ['no beach yet', 'what', 'doesnt exist'],
+        adult: ['no beach', 'what', 'huh']
+      },
+      afterOpening: {
+        child: ['beach!', 'i love the beach!', 'yeah!', 'lets go!'],
+        preteen: ['beach sounds good', 'sure', 'ok', 'yeah'],
+        teen: ['sure', 'ok', 'alright'],
+        adult: ['sounds good', 'sure']
+      }
+    },
+    'lighthouse': {
+      beforeOpening: {
+        child: ['what', 'lighthouse?', 'whats a lighthouse', 'huh'],
+        preteen: ['lighthouse?', 'what lighthouse', 'theres no lighthouse', 'what'],
+        teen: ['no lighthouse yet', 'what', 'doesnt exist'],
+        adult: ['no lighthouse', 'what', 'huh']
+      },
+      afterOpening: {
+        child: ['lighthouse!', 'lets go!', 'yeah!', 'ok!'],
+        preteen: ['sure', 'ok', 'lighthouse is cool', 'yeah'],
+        teen: ['sure', 'ok', 'alright'],
+        adult: ['okay', 'sure']
+      }
+    }
+  },
+  
+  // Time traveler responses
+  timeTraveler: {
+    claim: {
+      believer: {
+        child: ['REALLY??', 'are you really from the future??', 'thats so cool!!', 'WOW', 'what happens next??'],
+        preteen: ['wait really?', 'are you serious', 'no way', 'prove it', 'thats crazy'],
+        teen: ['lol sure', 'ok time traveler', 'prove it', 'yeah right'],
+        adult: ['really', 'prove it', 'interesting', 'sure']
+      },
+      skeptic: {
+        child: ['youre lying', 'no youre not', 'thats not real', 'time travel isnt real'],
+        preteen: ['lol ok', 'sure you are', 'yeah right', 'whatever'],
+        teen: ['lol ok buddy', 'sure', 'yeah right', 'ok'],
+        adult: ['i doubt that', 'unlikely', 'sure', 'ok']
+      }
+    },
+    prediction: {
+      believer: {
+        child: ['REALLY?? THAT SOUNDS COOL', 'omg!!', 'when??', 'i hope youre right!', 'that would be awesome!!'],
+        preteen: ['wait really?', 'when does that happen', 'how do you know', 'interesting'],
+        teen: ['interesting', 'well see i guess', 'ok', 'maybe'],
+        adult: ['interesting', 'well see', 'maybe', 'could be']
+      },
+      skeptic: {
+        child: ['i dont believe you', 'youre making it up', 'thats not true'],
+        preteen: ['ok sure', 'doubt it', 'well see', 'maybe'],
+        teen: ['doubt it', 'sure', 'well see', 'ok'],
+        adult: ['doubt it', 'sure', 'ok', 'well see']
+      }
+    }
+  },
+  
+  // Iceberg tipping dialogue - timeline-aware based on rumor spread
+  icebergTipping: {
+    // March-April 2006: Iceberg just added, no rumors yet
+    noRumor: {
+      child: ['this place is cool', 'its slippery!', 'the iceberg!', 'so much ice'],
+      preteen: ['cool iceberg', 'new area', 'nice'],
+      teen: ['iceberg area', 'pretty cool', 'nice spot'],
+      adult: ['cool iceberg', 'new area', 'nice spot']
+    },
+    // May-June 2006: Rumor beginning to surface
+    earlyRumor: {
+      child: ['i heard if we all stand on one side it tips!', 'can we tip it??', 'someone said it tips over!'],
+      preteen: ['heard a rumor about tipping this', 'can this tip over?', 'someone said we can tip it'],
+      teen: ['heard we can tip this', 'tipping rumor', 'can this actually tip'],
+      adult: ['heard a tipping rumor', 'can this tip', 'someone said it tips']
+    },
+    // July-October 2006: Widespread tipping attempts
+    widespreadRumor: {
+      child: ['EVERYONE ON ONE SIDE', 'lets tip it!!', 'we need more people!', 'stand on this side!', 'TIP THE ICEBERG'],
+      preteen: ['everyone on one side', 'lets tip this', 'we need more people', 'stand over here'],
+      teen: ['lets try to tip it', 'everyone on one side', 'need more people', 'tip attempt'],
+      adult: ['everyone on one side', 'lets tip this', 'need more people']
+    },
+    // September-October 2006: Hard hat rumor beginning
+    hardHatRumorStart: {
+      child: ['someone said we need hard hats!', 'hard hats only!', 'wear hard hats!', 'i heard you need a hard hat'],
+      preteen: ['hard hat rumor', 'only hard hats work', 'need hard hats', 'heard about hard hats'],
+      teen: ['hard hat thing', 'supposedly need hard hats', 'hard hat rumor'],
+      adult: ['heard about hard hats', 'hard hat rumor', 'need hard hats']
+    },
+    // November 2006+: Widespread hard hat + dance belief
+    hardHatDance: {
+      child: ['HARD HATS AND DANCE!', 'everyone wear ONLY hard hat!', 'dance on this side!', 'HARD HAT ONLY!', 'we need to dance!'],
+      preteen: ['hard hat and dance', 'only hard hat and dance', 'everyone dance', 'hard hat only'],
+      teen: ['hard hat dance attempt', 'only hard hats', 'dance on one side', 'hard hat method'],
+      adult: ['hard hat and dance', 'only hard hats', 'everyone dance']
+    }
   }
 };
 
@@ -1057,18 +1847,63 @@ const DIALOGUE = {
 const EASTER_EGG_ITEMS = [452, 233]; // Viking Helmet, Red Electric Guitar
 
 /**
+ * Get iceberg tipping dialogue based on timeline
+ */
+function getIcebergDialogue(version: Version, age: BotAge): string[] {
+  const messages: string[] = [];
+  
+  // Before iceberg exists (before March 29, 2006)
+  if (isLower(version, '2006-03-29')) {
+    return messages;
+  }
+  
+  const dialogueAge = getDialogueAge(age);
+  
+  // March-April 2006: No rumors yet
+  if (isGreaterOrEqual(version, '2006-03-29') && isLower(version, '2006-05-01')) {
+    return DIALOGUE.icebergTipping.noRumor[dialogueAge];
+  }
+  
+  // May-June 2006: Early rumor
+  if (isGreaterOrEqual(version, '2006-05-01') && isLower(version, '2006-07-01')) {
+    return DIALOGUE.icebergTipping.earlyRumor[dialogueAge];
+  }
+  
+  // July-August 2006: Widespread basic rumor
+  if (isGreaterOrEqual(version, '2006-07-01') && isLower(version, '2006-09-01')) {
+    return DIALOGUE.icebergTipping.widespreadRumor[dialogueAge];
+  }
+  
+  // September-October 2006: Hard hat rumor starting
+  if (isGreaterOrEqual(version, '2006-09-01') && isLower(version, '2006-11-01')) {
+    // Mix of widespread basic rumor and hard hat rumor
+    return [...DIALOGUE.icebergTipping.widespreadRumor[dialogueAge], ...DIALOGUE.icebergTipping.hardHatRumorStart[dialogueAge]];
+  }
+  
+  // November 2006+: Hard hat + dance widespread
+  if (isGreaterOrEqual(version, '2006-11-01')) {
+    return DIALOGUE.icebergTipping.hardHatDance[dialogueAge];
+  }
+  
+  return messages;
+}
+
+/**
  * Get timeline-specific dialogue options based on version
  */
 function getTimelineDialogue(version: Version, age: BotAge): string[] {
   const timelineMessages: string[] = [];
   
+  // Map adult sub-groups to base age for timeline dialogue
+  const dialogueAge = getDialogueAge(age);
+  
   // Sport Shop opened (2005-11-03)
   if (isGreaterOrEqual(version, '2005-11-03') && isLower(version, '2005-11-15')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('new sport shop', 'sports shop is open', 'buying sports stuff', 'sport shop is cool');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('sport shop just opened', 'new shop at ski village', 'checking out sport shop');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('new sport shop opened', 'sports clothing shop');
     }
   }
@@ -1076,18 +1911,18 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
   // Puffle Discovery - First Sightings (2005-11-15 to 2005-11-21)
   // Pink and blue puffles spotted at Snow Forts, Night Club, Ice Rink
   if (isGreaterOrEqual(version, '2005-11-15') && isLower(version, '2005-11-21')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('I SAW A FLUFFY THING', 'theres little creatures here', 'did you see that',
         'what was that fuzzy thing', 'something is moving around', 'i saw something pink',
         'blue fluffy thing', 'what are those', 'they are so cute', 'i want to catch one');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('did anyone see those creatures', 'fluffy things spotted', 'whats with the fuzzy creatures',
         'saw something weird moving', 'little creatures around', 'anyone else seeing things',
         'pink and blue creatures', 'what are they');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('anyone else seeing creatures', 'fluffy things wandering around',
         'saw some kind of creature', 'whats going on with these things', 'mysterious creatures');
-    } else if (age === 'adult') {
+    } else if (dialogueAge === 'adult') {
       timelineMessages.push('noticed some little creatures', 'seeing strange animals here', 'small creatures around',
         'what are these things', 'cute little creatures');
     }
@@ -1096,19 +1931,19 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
   // Puffle Discovery - Official Documentation (2005-11-21 to 2005-12-01)
   // Newspaper Issue #6: "little fluffy things" officially confirmed, black and green also spotted
   if (isGreaterOrEqual(version, '2005-11-21') && isLower(version, '2005-12-01')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('they caught one', 'the newspaper says they exist', 'little fluffy things are real',
         'they are friendly', 'i saw green ones too', 'black ones are cool', 'four types now',
         'the creatures are safe', 'can we keep them');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('newspaper confirmed the sightings', 'fluffy things are real', 'they captured one as proof',
         'green and black ones spotted too', 'four different types', 'they seem friendly',
         'what are they called', 'still no official name');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('newspaper documented the creatures', 'official confirmation now',
         'caught one as evidence', 'black and green types too', 'apparently friendly',
         'wonder what they are');
-    } else if (age === 'adult') {
+    } else if (dialogueAge === 'adult') {
       timelineMessages.push('newspaper confirmed they exist', 'so they are real after all',
         'four different colors now', 'they seem harmless', 'pretty cute actually');
     }
@@ -1117,18 +1952,18 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
   // Puffle Naming Contest (2005-12-01 to 2005-12-08)
   // Newspaper Issue #7: naming contest announced, 5000 coin prize
   if (isGreaterOrEqual(version, '2005-12-01') && isLower(version, '2005-12-08')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('naming contest', 'we get to name them', 'i submitted a name',
         'what should we call them', '5000 coins for the winner', 'i hope my name wins',
         'contest ends soon', 'thinking of names', 'what did you call them');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('naming contest is on', 'submitted my name idea', 'contest for 5000 coins',
         'what name did you submit', 'hope i win', 'naming the creatures',
         'contest deadline is dec 7', 'good prize for naming');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('naming competition', 'submitted an entry', '5000 coin prize',
         'contest ends december 7th', 'wonder what theyll be called');
-    } else if (age === 'adult') {
+    } else if (dialogueAge === 'adult') {
       timelineMessages.push('naming contest is interesting', 'submitted a name idea',
         'letting the community choose', 'nice prize for the winner');
     }
@@ -1137,18 +1972,18 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
   // Puffles Named (2005-12-08 onwards)
   // Newspaper Issue #8: Official name "Puffles" announced (winners: Yolam08, Wafflepye, Gronnie)
   if (isGreaterOrEqual(version, '2005-12-08') && isLower(version, '2005-12-20')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('they are called PUFFLES', 'puffles won', 'the name is puffles',
         'yolam08 won', 'wafflepye won too', 'gronnie also won', 'three winners got 5000 coins',
         'i like the name puffles', 'puffles is a good name', 'congrats to the winners');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('official name is puffles', 'puffles won the contest', 'three people won',
         'yolam08 wafflepye and gronnie', 'they each got 5000 coins', 'puffles is a cool name',
         'contest results are in', 'pretty good name choice');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('theyre called puffles now', 'puffles was the winning name',
         'three winners split the prize', 'not a bad name', 'puffles it is');
-    } else if (age === 'adult') {
+    } else if (dialogueAge === 'adult') {
       timelineMessages.push('so theyre called puffles', 'puffles is a good name',
         'three people won', 'nice choice by the community');
     }
@@ -1156,103 +1991,103 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
   
   // Pizza Parlor opened (2006-02-24)
   if (isGreaterOrEqual(version, '2006-02-24')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('lets go to the pizza place', 'i love pizza', 'pizza time');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('pizza parlor is cool', 'getting pizza', 'pizza party');
     }
   }
   
   // Puffles - General (only after Pet Shop opens on 2006-03-17)
   if (isGreaterOrEqual(version, '2006-03-17')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('got a puffle?', 'which puffle is best?', 'i love puffles',
         'how do i get a puffle?', 'whats a puffle?', 'where is the pet shop?', 'can i have a pet?');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('got a puffle?', 'which puffle is best?', 'puffle colors');
     }
   }
   
   // Pet Shop opened (2006-03-17) - NEW!
   if (isGreaterOrEqual(version, '2006-03-17') && isLower(version, '2006-04-01')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('OMG THE NEW PET SHOP', 'have you seen the pet shop', 'the pet shop is here!', 'i want a puffle so bad');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('new pet shop is sick', 'finally puffles', 'pet shop just opened', 'getting a puffle today');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('pet shop is actually cool', 'puffles are interesting', 'new pet shop opened');
     }
   }
   
   // Iceberg opened (2006-03-29) - NEW!
   if (isGreaterOrEqual(version, '2006-03-29') && isLower(version, '2006-04-15')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('THE ICEBERG IS HERE', 'have you been to the iceberg', 'lets go to iceberg', 'iceberg is so cool');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('iceberg just opened', 'anyone at the iceberg', 'new iceberg room', 'iceberg is epic');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('iceberg finally released', 'checking out the new iceberg', 'iceberg looks cool');
     }
   }
   
   // Iceberg exists (for questions)
   if (isGreaterOrEqual(version, '2006-03-29')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('how do you tip the iceberg', 'can the iceberg tip', 'whats the iceberg secret');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('anyone wanna go to the iceberg', 'hows the iceberg tip work', 'iceberg secrets?');
     }
   }
   
   // Find Four released (2006-04-27)
   if (isGreaterOrEqual(version, '2006-04-27') && isLower(version, '2006-05-15')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('find four is fun', 'wanna play find four', 'new game at lodge');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('find four tables are new', 'anyone play find four yet', 'new find four game');
     }
   }
   
   // Find Four exists
   if (isGreaterOrEqual(version, '2006-04-27')) {
-    if (age === 'preteen') {
+    if (dialogueAge === 'preteen') {
       timelineMessages.push('wanna play find four');
     }
   }
   
   // PSA Missions (2006-08-18)
   if (isGreaterOrEqual(version, '2006-08-18') && isLower(version, '2006-09-10')) {
-    if (age === 'preteen') {
+    if (dialogueAge === 'preteen') {
       timelineMessages.push('new PSA mission', 'secret agent mission', 'have you done the mission');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('PSA missions are cool', 'secret agent stuff', 'mission was fun');
     }
   }
   
   // Lighthouse opened (2006-09-21) - NEW!
   if (isGreaterOrEqual(version, '2006-09-21') && isLower(version, '2006-10-10')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('lighthouse is here', 'new lighthouse room', 'lighthouse is cool');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('lighthouse just opened', 'beacon and lighthouse are new', 'check out the lighthouse');
     }
   }
   
   // Disney Acquisition Announcement - First Week (2007-08-01 to 2007-08-08)
   if (isGreaterOrEqual(version, '2007-08-01') && isLower(version, '2007-08-08')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('DISNEY BOUGHT CLUB PENGUIN', 'disney owns this now', 'club penguin is disney now',
         'omg disney', 'this is gonna be so cool', 'disney is awesome', 'i cant believe disney bought this',
         'are we gonna see mickey mouse', 'disney club penguin');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('disney just bought club penguin', 'disney acquisition', 'disney owns this now',
         'club penguin is disney property now', 'huge news', 'disney deal just happened',
         'wonder what this means', 'big changes coming', 'disney money incoming');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('disney acquired club penguin', 'disney bought the game', 'acquisition just announced',
         'club penguin sold to disney', 'wonder if this is good or bad', 'disney has deep pockets',
         'hope they dont ruin it', 'could be interesting', 'big corporate buyout');
-    } else if (age === 'adult') {
+    } else if (dialogueAge === 'adult') {
       timelineMessages.push('disney bought club penguin', 'disney just acquired this',
         'big acquisition', 'interesting move', 'disney owns it now',
         'wonder where this is going', 'could be good or bad', 'big investment');
@@ -1261,18 +2096,18 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
   
   // Disney Acquisition Uncertainty (2007-08-08 to 2007-11-01)
   if (isGreaterOrEqual(version, '2007-08-08') && isLower(version, '2007-11-01')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('whens disney gonna do stuff', 'is disney changing things', 'disney hasnt done much yet',
         'still waiting for disney stuff', 'wonder what disney will add');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('what is disney planning', 'wonder what changes are coming', 'disney been quiet',
         'havent seen many changes yet', 'waiting to see what disney does', 'hope disney doesnt mess it up',
         'concerned about disney changes', 'will disney keep it the same');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('whats disney gonna do with this', 'no major changes yet', 'disney playing it safe',
         'waiting for the other shoe to drop', 'hope they dont disney-fy it too much',
         'concerned about direction', 'cautiously optimistic', 'wait and see approach');
-    } else if (age === 'adult') {
+    } else if (dialogueAge === 'adult') {
       timelineMessages.push('waiting to see what disney does', 'not many changes yet',
         'transition period', 'keeping an eye on it', 'hope they keep it the same',
         'worried about commercialization', 'curious what their plan is');
@@ -1281,18 +2116,18 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
   
   // Disney Budget Increase & Coins for Change Era (2007-11-01 to 2008-01-01)
   if (isGreaterOrEqual(version, '2007-11-01') && isLower(version, '2008-01-01')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('so much new stuff', 'disney is adding cool things', 'game is getting better',
         'more stuff than before', 'disney is doing good');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('budget increase is noticeable', 'lots of new content', 'disney money showing',
         'quality improvements', 'more updates than before', 'this is actually good so far',
         'still wonder about long term though');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('clear budget increase', 'production quality went up', 'disney money is real',
         'more polished updates', 'have to admit its improving', 'quality is noticeably better',
         'still concerned about future changes though', 'good so far but we will see');
-    } else if (age === 'adult') {
+    } else if (dialogueAge === 'adult') {
       timelineMessages.push('clear budget increase', 'production quality is better',
         'they spent more money on this', 'quality went up', 'looking good so far',
         'cautiously optimistic', 'well see how it goes');
@@ -1301,19 +2136,19 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
   
   // Coins for Change (2007-12-15 to 2007-12-24)
   if (isGreaterOrEqual(version, '2007-12-15') && isLower(version, '2007-12-25')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('COINS FOR CHANGE', 'we can donate to charity', 'giving my coins to help people',
         'this is so cool', 'donating for real charity', 'helping with my coins',
         'coins go to real charities', 'which charity should i pick');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('coins for change is amazing', 'donating coins to charity', 'real world donations',
         'this is actually really cool', 'virtual coins to real money', 'great charity initiative',
         'which cause you donating to', 'disney did good with this');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('coins for change is impressive', 'virtual to real charity donations',
         'actually brilliant concept', 'using game coins for real good', 'which organization you picking',
         'disney nailed this', 'smart charitable initiative', 'this is genuinely good');
-    } else if (age === 'adult') {
+    } else if (dialogueAge === 'adult') {
       timelineMessages.push('great charity idea', 'coins for change is awesome', 'virtual coins to real charity',
         'really cool initiative', 'teaching kids about giving',
         'smart charity system', 'good use of game currency');
@@ -1322,18 +2157,18 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
   
   // Early 2008 - Art Direction Shift (2008-01-01 to 2008-04-01)
   if (isGreaterOrEqual(version, '2008-01-01') && isLower(version, '2008-04-01')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('the art looks different', 'things look weird now', 'why does it look different',
         'i miss the old style', 'new art is strange');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('art style is changing', 'notice the different art direction', 'style is shifting',
         'not sure how i feel about new art', 'old style was better', 'art looks more corporate',
         'lots of new people working on it', 'feels different now');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('clear art direction shift', 'aesthetic is changing', 'not a fan of new style',
         'losing the original charm', 'feels more corporate now', 'can tell new people are working on it',
         'disney influence showing', 'preferred the old art', 'character is changing');
-    } else if (age === 'adult') {
+    } else if (dialogueAge === 'adult') {
       timelineMessages.push('art style changed', 'looks different now', 'new team working on it',
         'more corporate looking', 'losing the original feel', 'lot more people on the team',
         'disney influence showing', 'worried about the direction');
@@ -1342,33 +2177,33 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
   
   // Aqua Grabber (2008-02-19)
   if (isGreaterOrEqual(version, '2008-02-19') && isLower(version, '2008-03-10')) {
-    if (age === 'preteen') {
+    if (dialogueAge === 'preteen') {
       timelineMessages.push('aqua grabber is awesome', 'new aqua grabber game', 'anyone play aqua grabber yet');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('aqua grabber is pretty good', 'new game at the iceberg', 'aqua grabber just released');
     }
   }
   
   // Card-Jitsu (2008-11-17) - NEW!
   if (isGreaterOrEqual(version, '2008-11-17') && isLower(version, '2008-12-10')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('CARD JITSU IS HERE', 'have you played card jitsu', 'card jitsu is so cool', 'im gonna be a ninja');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('card jitsu just came out', 'new card jitsu game', 'dojo has card jitsu now', 'ninja training');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('card jitsu is actually good', 'new card game at dojo', 'card jitsu released', 'ninja path');
-    } else if (age === 'adult') {
+    } else if (dialogueAge === 'adult') {
       timelineMessages.push('card game is fun', 'card jitsu is cool', 'new dojo thing');
     }
   }
   
   // Card-Jitsu exists (after release)
   if (isGreaterOrEqual(version, '2008-11-17')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       timelineMessages.push('wanna play card jitsu', 'card jitsu time');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       timelineMessages.push('wanna play card jitsu', 'anyone at the dojo', 'card jitsu match?');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       timelineMessages.push('card jitsu anyone', 'dojo?');
     }
   }
@@ -1382,82 +2217,85 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
 function getEventDialogue(version: Version, age: BotAge): string[] {
   const eventMessages: string[] = [];
   
+  // Map adult sub-groups to base age for event dialogue
+  const dialogueAge = getDialogueAge(age);
+  
   // Beta Test Party (October 24, 2005)
   if (isGreaterOrEqual(version, '2005-10-24') && isLower(version, '2005-10-25')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       eventMessages.push('PARTY TIME', 'this party is awesome', 'best party ever', 'im at the party');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       eventMessages.push('beta party is epic', 'party is so fun', 'everyone is here', 'party hype');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       eventMessages.push('beta party is cool', 'nice event', 'good turnout', 'party is fun');
     }
   }
   
   // Pizza Parlor Opening Party (February 24, 2006)
   if (isGreaterOrEqual(version, '2006-02-24') && isLower(version, '2006-02-25')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       eventMessages.push('PIZZA PARTY', 'pizza parlor opening', 'new pizza place', 'pizza celebration');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       eventMessages.push('pizza parlor grand opening', 'opening party', 'new building party');
     }
   }
   
   // Egg Hunt (April 12-23, 2006)
   if (isGreaterOrEqual(version, '2006-04-12') && isLower(version, '2006-04-24')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       eventMessages.push('EGG HUNT', 'finding eggs', 'where are the eggs', 'egg hunting time', 'found any eggs');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       eventMessages.push('egg hunt is on', 'hunting for eggs', 'anyone found eggs', 'egg locations');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       eventMessages.push('egg hunt event', 'looking for eggs', 'egg hunt challenge');
     }
   }
   
   // Mine Opening and Cave Party (May 25-26, 2006)
   if (isGreaterOrEqual(version, '2006-05-25') && isLower(version, '2006-05-27')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       eventMessages.push('the cave opened', 'new cave', 'cave party', 'cave is cool');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       eventMessages.push('cave grand opening', 'new mine area', 'exploring the cave');
     }
   }
   
   // Summer Party (June 22 - July 5, 2006)
   if (isGreaterOrEqual(version, '2006-06-22') && isLower(version, '2006-07-06')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       eventMessages.push('SUMMER PARTY', 'summer is here', 'beach party', 'summer fun');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       eventMessages.push('summer party time', 'beach party is on', 'summer event');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       eventMessages.push('summer party', 'beach event', 'summer celebration');
     }
   }
   
   // Sports Party (August 17-28, 2006)
   if (isGreaterOrEqual(version, '2006-08-17') && isLower(version, '2006-08-29')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       eventMessages.push('SPORT PARTY', 'sports event', 'playing sports', 'sports are fun');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       eventMessages.push('sport party is cool', 'sports competition', 'sport event');
     }
   }
   
   // Lighthouse and Beacon Party (September 21 - October 4, 2006)
   if (isGreaterOrEqual(version, '2006-09-21') && isLower(version, '2006-10-05')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       eventMessages.push('lighthouse party', 'new lighthouse', 'party at lighthouse', 'beacon party');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       eventMessages.push('lighthouse grand opening', 'beacon and lighthouse party', 'new area party');
     }
   }
   
   // Halloween Party (October 19 - November 2, 2006)
   if (isGreaterOrEqual(version, '2006-10-19') && isLower(version, '2006-11-03')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       eventMessages.push('HALLOWEEN', 'spooky time', 'halloween party', 'trick or treat', 'scary decorations');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       eventMessages.push('halloween event', 'spooky party', 'halloween is here', 'haunted party');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       eventMessages.push('halloween party', 'spooky decorations', 'halloween event');
     }
   }
@@ -1465,24 +2303,24 @@ function getEventDialogue(version: Version, age: BotAge): string[] {
   // Christmas/Holiday Parties (2005 & 2006)
   if ((isGreaterOrEqual(version, '2005-12-16') && isLower(version, '2005-12-26')) ||
       (isGreaterOrEqual(version, '2006-12-21') && isLower(version, '2007-01-03'))) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       eventMessages.push('CHRISTMAS', 'holiday party', 'merry christmas', 'santa is here', 'christmas decorations');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       eventMessages.push('christmas party', 'holiday event', 'merry christmas', 'festive decorations');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       eventMessages.push('christmas event', 'holiday party', 'festive season');
-    } else if (age === 'adult') {
+    } else if (dialogueAge === 'adult') {
       eventMessages.push('holiday event', 'christmas celebration', 'festive decorations');
     }
   }
   
   // Card-Jitsu Release Party (November 17-24, 2008)
   if (isGreaterOrEqual(version, '2008-11-17') && isLower(version, '2008-11-25')) {
-    if (age === 'child') {
+    if (dialogueAge === 'child') {
       eventMessages.push('CARD JITSU PARTY', 'dojo party', 'ninja party', 'card jitsu event');
-    } else if (age === 'preteen') {
+    } else if (dialogueAge === 'preteen') {
       eventMessages.push('card jitsu launch party', 'dojo celebration', 'ninja event');
-    } else if (age === 'teen') {
+    } else if (dialogueAge === 'teen') {
       eventMessages.push('card jitsu release event', 'dojo party', 'launch celebration');
     }
   }
@@ -1509,34 +2347,39 @@ function getBotChatMessage(bot: Client, context: 'general' | 'beta' | 'betaHat' 
   }
   
   if (context === 'betaDefense') {
-    if (age === 'teen' || age === 'adult') {
-      const messages = DIALOGUE.betaDefense[age];
+    const dialogueAge = getDialogueAge(age);
+    if (dialogueAge === 'teen' || dialogueAge === 'adult') {
+      const messages = DIALOGUE.betaDefense[dialogueAge];
       return messages[randomInt(0, messages.length - 1)];
     }
     return null;
   }
   
   if (context === 'beta' && behavior.hasBetaHat) {
-    const messages = DIALOGUE.beta[age as keyof typeof DIALOGUE.beta];
+    const dialogueAge = getDialogueAge(age);
+    const messages = DIALOGUE.beta[dialogueAge];
     if (messages) {
       return messages[randomInt(0, messages.length - 1)];
     }
   }
   
   if (context === 'betaHat') {
-    const messages = DIALOGUE.betaHat[age];
+    const dialogueAge = getDialogueAge(age);
+    const messages = DIALOGUE.betaHat[dialogueAge];
     return messages[randomInt(0, messages.length - 1)];
   }
   
   if (context === 'easterEgg') {
-    const messages = DIALOGUE.easterEgg[age as keyof typeof DIALOGUE.easterEgg];
+    const dialogueAge = getDialogueAge(age);
+    const messages = DIALOGUE.easterEgg[dialogueAge];
     if (messages) {
       return messages[randomInt(0, messages.length - 1)];
     }
   }
   
   // General chat with timeline awareness
-  const ageDialogue = DIALOGUE[age];
+  const dialogueAge = getDialogueAge(age);
+  const ageDialogue = DIALOGUE[dialogueAge];
   const baseMessages = [...ageDialogue.greetings, ...ageDialogue.general, ...ageDialogue.questions];
   
   // Add timeline-specific messages
@@ -1547,13 +2390,19 @@ function getBotChatMessage(bot: Client, context: 'general' | 'beta' | 'betaHat' 
   // Add non-member dialogue if applicable
   const nonMemberMessages: string[] = [];
   if (behavior.isNonMember && Math.random() < 0.3) {
-    const nmDialogue = DIALOGUE.nonMember[age];
+    const nmDialogue = DIALOGUE.nonMember[dialogueAge];
     if (nmDialogue) {
       nonMemberMessages.push(...nmDialogue);
     }
   }
   
-  const allMessages = [...baseMessages, ...timelineMessages, ...eventMessages, ...nonMemberMessages];
+  // Add iceberg-specific dialogue if at iceberg
+  const icebergMessages: string[] = [];
+  if (bot.room && bot.room.id === ROOM_IDS.ICEBERG) {
+    icebergMessages.push(...getIcebergDialogue(version, age));
+  }
+  
+  const allMessages = [...baseMessages, ...timelineMessages, ...eventMessages, ...nonMemberMessages, ...icebergMessages];
   return allMessages[randomInt(0, allMessages.length - 1)];
 }
 
@@ -1592,6 +2441,9 @@ function detectBetaHat(room: any, currentDate: Date): Client | null {
   
   const allPenguins = [...room.players, ...room.botGroup.bots];
   for (const penguin of allPenguins) {
+    if (penguin.room !== room) {
+      continue;
+    }
     if (penguin.penguin.head === 413 && !penguin.isBot) { // Party hat
       return penguin;
     }
@@ -1729,7 +2581,8 @@ function applyChatBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) 
     const realPlayers = room.players.filter((p: Client) => !p.isBot);
     for (const player of realPlayers) {
       if (isInappropriateUsername(player.username) && Math.random() < 0.2) {
-        const reactions = DIALOGUE.inappropriateUsername[behavior.age];
+        const dialogueAge = getDialogueAge(behavior.age);
+        const reactions = DIALOGUE.inappropriateUsername[dialogueAge];
         if (reactions) {
           const reaction = reactions[randomInt(0, reactions.length - 1)];
           botSendChat(bot, reaction);
@@ -1747,7 +2600,8 @@ function applyChatBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) 
           );
           // If party hat player is close (within 150 pixels) and bot is not already chatting
           if (distance < 150 && Math.random() < 0.3) {
-            const reactions = DIALOGUE.betaBeggingBeta[behavior.age];
+            const dialogueAge = getDialogueAge(behavior.age);
+            const reactions = DIALOGUE.betaBeggingBeta[dialogueAge];
             if (reactions) {
               const reaction = reactions[randomInt(0, reactions.length - 1)];
               botSendChat(bot, reaction);
@@ -1780,7 +2634,8 @@ function applyChatBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) 
         
         // If other beta tester has 3+ kids mobbing them, comment on it
         if (swarmingKids >= 3) {
-          const reactions = DIALOGUE.betaWatchingMob[behavior.age];
+          const dialogueAge = getDialogueAge(behavior.age);
+          const reactions = DIALOGUE.betaWatchingMob[dialogueAge];
           if (reactions) {
             const reaction = reactions[randomInt(0, reactions.length - 1)];
             botSendChat(bot, reaction);
@@ -2082,6 +2937,7 @@ function applyPartyHatAttractionBehavior(bot: Client, room: any, intervals: Node
   
   const attractionInterval = setInterval(() => {
     if (bot.room !== room) {
+      partyHatTarget = null;
       clearInterval(attractionInterval);
       return;
     }
@@ -2291,6 +3147,52 @@ function applyShowOffBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[
   intervals.push(showInterval);
 }
 
+/**
+ * Apply special iceberg tipping behavior based on timeline
+ */
+function applyIcebergTippingBehavior(bot: Client, room: any, intervals: NodeJS.Timeout[]) {
+  if (room.id !== ROOM_IDS.ICEBERG) return;
+  
+  const version = bot.server.settings.version;
+  const behavior = botBehaviors.get(bot);
+  if (!behavior) return;
+  
+  // Before May 2006, no special behavior
+  if (isLower(version, '2006-05-01')) {
+    return;
+  }
+  
+  // May 2006+: Bots try to coordinate tipping
+  const tippingInterval = setInterval(() => {
+    if (bot.room === room) {
+      // Cluster on right side of iceberg (x > 400)
+      if (Math.random() < 0.7) {
+        bot.setPosition(randomInt(450, 650), randomInt(200, 400));
+      }
+      
+      // Hard hat + dance phase (November 2006+)
+      if (isGreaterOrEqual(version, '2006-11-01')) {
+        // 40% of bots participate in hard hat dancing
+        if (Math.random() < 0.4) {
+          // Try to wear only hard hat (item 403)
+          // In a real implementation, this would change bot appearance
+          // For now, just make them dance
+          if (behavior.personality === 'dancer' || Math.random() < 0.5) {
+            bot.setFrame(26); // Dance
+            setTimeout(() => {
+              if (bot.room === room) bot.setFrame(1);
+            }, 4000);
+          }
+        }
+      }
+    } else {
+      clearInterval(tippingInterval);
+    }
+  }, randomInt(5000, 12000));
+  
+  intervals.push(tippingInterval);
+}
+
 function cleanupBotBehavior(bot: Client) {
   const behavior = botBehaviors.get(bot);
   if (behavior) {
@@ -2334,16 +3236,17 @@ function isSuperVulgar(message: string): boolean {
 /**
  * Check if a username is inappropriate
  */
-function isInappropriateUsername(username: string | undefined): boolean {
+export function isInappropriateUsername(username: string | undefined): boolean {
   if (!username) return false;
   
   const inappropriateWords = [
-    'fuck', 'shit', 'ass', 'bitch', 'dick', 'cock', 'pussy', 'cunt',
-    'nigger', 'nigga', 'faggot', 'fag', 'retard', 'rape', 'sex',
-    'porn', 'xxx', 'cum', 'penis', 'vagina', 'slut', 'whore',
+    'fuck', 'shit', 'asshole', 'bitch', 'cocks', 'pussy', 'cunt',
+    'nigger', 'nigga', 'faggot', 'retard', 'rape', 'sex',
+    'porn', 'xxx', 'penis', 'vagina', 'slut', 'whore',
     'piss', 'damn', 'hell', 'bastard', 'twat', 'dildo',
     'anal', 'hitler', 'nazi', 'kkk', 'kill', 'death', 'die',
-    'suicide', 'pedo', 'molest', 'slave', 'gay', 'homo'
+    'suicide', 'pedo', 'molest', 'slave', 'gay', 'homo', 'rape',
+    'rapist', 'pedo'
   ];
   
   const lowerUsername = username.toLowerCase();
@@ -2378,6 +3281,390 @@ function isDeveloperQuestion(message: string): boolean {
   
   const lowerMessage = message.toLowerCase();
   return developerQuestions.some(phrase => lowerMessage.includes(phrase));
+}
+
+/**
+ * Detect conversation message type
+ */
+function detectMessageType(message: string): 'greeting' | 'question' | 'thanks' | 'goodbye' | 'followup' | 'compliment' | 'insult' | 'excitement' | 'confusion' | 'agreement' | 'disagreement' | 'laugh' | 'profanity' | 'extremeProfanity' | null {
+  const lowerMessage = message.toLowerCase();
+  
+  // Extreme profanity / slurs (check first, highest priority)
+  if (/\b(nigger|nigga|faggot|fag|retard|retarded|kys|kill yourself|cunt|bitch)\b/.test(lowerMessage)) {
+    return 'extremeProfanity';
+  }
+  
+  // Regular profanity
+  if (/\b(fuck|fucking|fucked|shit|shitting|damn|damned|ass|asshole|hell|bastard|dick|cock|pussy)\b/.test(lowerMessage)) {
+    return 'profanity';
+  }
+  
+  // Greetings
+  if (/\b(hi|hello|hey|sup|yo|hiya|greetings|morning|afternoon|evening)\b/.test(lowerMessage)) {
+    return 'greeting';
+  }
+  
+  // Thanks
+  if (/\b(thanks|thank you|thx|ty|tysm|appreciate)\b/.test(lowerMessage)) {
+    return 'thanks';
+  }
+  
+  // Goodbyes
+  if (/\b(bye|goodbye|cya|see ya|later|gtg|gotta go|peace|farewell)\b/.test(lowerMessage)) {
+    return 'goodbye';
+  }
+  
+  // Laughter
+  if (/\b(lol|lmao|lmfao|rofl|haha|hehe|lulz|xd)\b/.test(lowerMessage)) {
+    return 'laugh';
+  }
+  
+  // Excitement (must come before followup since it shares some keywords)
+  if (/\b(omg|wow|awesome|amazing|epic|sick|dope|insane|crazy|incredible|yay|woohoo|yess|yasss)\b/.test(lowerMessage) || /!{2,}/.test(message)) {
+    return 'excitement';
+  }
+  
+  // Compliments
+  if (/\b(nice|cool outfit|good job|well done|great|love your|you rock|youre great|youre awesome|youre the best)\b/.test(lowerMessage)) {
+    return 'compliment';
+  }
+  
+  // Insults
+  if (/\b(stupid|dumb|idiot|loser|trash|terrible|suck|bad|worst|hate you|annoying|ugly)\b/.test(lowerMessage)) {
+    return 'insult';
+  }
+  
+  // Confusion
+  if (/\b(confused|dont understand|dont get it|what does that mean|explain|unclear|huh|wdym)\b/.test(lowerMessage) || /\?\?+/.test(message)) {
+    return 'confusion';
+  }
+  
+  // Agreement
+  if (/\b(i agree|me too|same here|exactly|true|facts|for real|fr|totally|absolutely|definitely)\b/.test(lowerMessage)) {
+    return 'agreement';
+  }
+  
+  // Disagreement
+  if (/\b(disagree|i dont think|not really|nah|nope|false|wrong|incorrect|not true)\b/.test(lowerMessage)) {
+    return 'disagreement';
+  }
+  
+  // Questions (ending with ? or starting with who/what/where/when/why/how)
+  if (message.includes('?') || /^(who|what|where|when|why|how|is|are|do|does|can|could|would)\b/i.test(lowerMessage)) {
+    return 'question';
+  }
+  
+  // Generic followup (last priority since most general)
+  if (/\b(yeah|yep|yes|no|ok|okay|cool|nice|alright|sure|maybe)\b/.test(lowerMessage)) {
+    return 'followup';
+  }
+  
+  return null;
+}
+
+/**
+ * Check if message matches a specific phrase
+ */
+function matchSpecificPhrase(message: string): keyof typeof DIALOGUE.specificPhrases | null {
+  const lowerMessage = message.toLowerCase().trim();
+  
+  // Check each specific phrase
+  const phrases = Object.keys(DIALOGUE.specificPhrases) as Array<keyof typeof DIALOGUE.specificPhrases>;
+  for (const phrase of phrases) {
+    if (lowerMessage.includes(phrase)) {
+      return phrase;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Check if message mentions timeline-aware features
+ */
+function matchTimelineAwarePhrase(message: string): keyof typeof DIALOGUE.timelineAware | null {
+  const lowerMessage = message.toLowerCase().trim();
+  
+  const phrases = Object.keys(DIALOGUE.timelineAware) as Array<keyof typeof DIALOGUE.timelineAware>;
+  for (const phrase of phrases) {
+    if (lowerMessage.includes(phrase)) {
+      return phrase;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Check if message is a time traveler claim or prediction
+ */
+function detectTimeTraveler(message: string): 'claim' | 'prediction' | null {
+  const lowerMessage = message.toLowerCase();
+  
+  // Time traveler claim
+  if (/\b(im from the future|i am from the future|im a time traveler|im a time traveller|time traveler here|from the future)\b/.test(lowerMessage)) {
+    return 'claim';
+  }
+  
+  // Future prediction (phrases like "disney will buy this", "card jitsu will be released", "in the future")
+  if (/\b(will happen|will be|gonna happen|is coming|in the future|mark my words|you'll see|wait and see|trust me)\b/.test(lowerMessage)) {
+    // Only count as prediction if they mention future events
+    if (/\b(disney|card jitsu|aqua grabber|dojo|ninja|update|feature|party|event)\b/.test(lowerMessage)) {
+      return 'prediction';
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Get timeline-aware response based on version
+ */
+function getTimelineAwareResponse(
+  phrase: keyof typeof DIALOGUE.timelineAware, 
+  version: Version, 
+  age: BotAge
+): string | null {
+  // Check timeline for each feature
+  const dialogueAge = getDialogueAge(age);
+  
+  if (phrase === 'disney') {
+    const data = DIALOGUE.timelineAware['disney'];
+    const responses = isGreaterOrEqual(version, '2007-08-01') 
+      ? data.postAcquisition[dialogueAge] 
+      : data.preAcquisition[dialogueAge];
+    return responses[randomInt(0, responses.length - 1)];
+  }
+  
+  if (phrase === 'card jitsu') {
+    const data = DIALOGUE.timelineAware['card jitsu'];
+    const responses = isGreaterOrEqual(version, '2008-11-17') 
+      ? data.afterRelease[dialogueAge] 
+      : data.beforeRelease[dialogueAge];
+    return responses[randomInt(0, responses.length - 1)];
+  }
+  
+  if (phrase === 'aqua grabber') {
+    const data = DIALOGUE.timelineAware['aqua grabber'];
+    const responses = isGreaterOrEqual(version, '2008-02-19') 
+      ? data.afterRelease[dialogueAge] 
+      : data.beforeRelease[dialogueAge];
+    return responses[randomInt(0, responses.length - 1)];
+  }
+  
+  if (phrase === 'dojo') {
+    const data = DIALOGUE.timelineAware['dojo'];
+    // Dojo existed from launch but was secret until Nov-Dec 2005
+    const responses = isGreaterOrEqual(version, '2005-11-01') 
+      ? data.afterRelease[dialogueAge] 
+      : data.beforeRelease[dialogueAge];
+    return responses[randomInt(0, responses.length - 1)];
+  }
+  
+  if (phrase === 'tip the iceberg') {
+    const data = DIALOGUE.timelineAware['tip the iceberg'];
+    
+    const dialogueAge = getDialogueAge(age);
+    
+    // Before iceberg exists (before March 29, 2006)
+    if (isLower(version, '2006-03-29')) {
+      const responses = data.beforeIceberg[dialogueAge];
+      return responses[randomInt(0, responses.length - 1)];
+    }
+    
+    // March-April 2006: No rumor yet
+    if (isGreaterOrEqual(version, '2006-03-29') && isLower(version, '2006-05-01')) {
+      const responses = data.noRumor[dialogueAge];
+      return responses[randomInt(0, responses.length - 1)];
+    }
+    
+    // November 2006+: Hard hat phase
+    if (isGreaterOrEqual(version, '2006-11-01')) {
+      const responses = data.hardHatPhase[dialogueAge];
+      return responses[randomInt(0, responses.length - 1)];
+    }
+    
+    // May-October 2006: General rumor exists
+    const responses = data.hasRumor[dialogueAge];
+    return responses[randomInt(0, responses.length - 1)];
+  }
+  
+  if (phrase === 'pizza parlor') {
+    const data = DIALOGUE.timelineAware['pizza parlor'];
+    const responses = isGreaterOrEqual(version, '2006-02-24') 
+      ? data.afterOpening[dialogueAge] 
+      : data.beforeOpening[dialogueAge];
+    return responses[randomInt(0, responses.length - 1)];
+  }
+  
+  if (phrase === 'the mine') {
+    const data = DIALOGUE.timelineAware['the mine'];
+    const responses = isGreaterOrEqual(version, '2006-05-25') 
+      ? data.afterOpening[dialogueAge] 
+      : data.beforeOpening[dialogueAge];
+    return responses[randomInt(0, responses.length - 1)];
+  }
+  
+  if (phrase === 'beach') {
+    const data = DIALOGUE.timelineAware['beach'];
+    // Beach/Dock opened April 18, 2006
+    const responses = isGreaterOrEqual(version, '2006-04-18') 
+      ? data.afterOpening[dialogueAge] 
+      : data.beforeOpening[dialogueAge];
+    return responses[randomInt(0, responses.length - 1)];
+  }
+  
+  if (phrase === 'lighthouse') {
+    const data = DIALOGUE.timelineAware['lighthouse'];
+    const responses = isGreaterOrEqual(version, '2006-09-21') 
+      ? data.afterOpening[dialogueAge] 
+      : data.beforeOpening[dialogueAge];
+    return responses[randomInt(0, responses.length - 1)];
+  }
+  
+  return null;
+}
+
+/**
+ * Handle bot conversations with players
+ */
+function handleBotConversations(player: Client, message: string) {
+  if (!player.room || player.isBot) return;
+  
+  // Check for different message types
+  const specificPhrase = matchSpecificPhrase(message);
+  const timelinePhrase = matchTimelineAwarePhrase(message);
+  const timeTravelerType = detectTimeTraveler(message);
+  const messageType = detectMessageType(message);
+  
+  if (!specificPhrase && !timelinePhrase && !timeTravelerType && !messageType) return;
+  
+  // Get version for timeline-aware responses
+  const version = player.server.settings.version;
+  
+  // Find nearby bots (within 200 pixels) that might respond
+  player.room.botGroup.bots.forEach((bot: Client) => {
+    const behavior = botBehaviors.get(bot);
+    if (!behavior) return;
+    
+    // Calculate distance
+    const distance = Math.sqrt(Math.pow(player.x - bot.x, 2) + Math.pow(player.y - bot.y, 2));
+    
+    // Bots respond if:
+    // 1. They're a socializer personality (more chatty)
+    // 2. Player is close by
+    // 3. Bot is already in conversation with this player
+    // 4. Random chance based on personality
+    
+    let responseChance = 0;
+    
+    if (behavior.personality === 'socializer' || behavior.personality === 'jokester') {
+      responseChance = distance < 200 ? 0.7 : distance < 350 ? 0.3 : 0.1;
+    } else if (behavior.personality === 'shy' || behavior.personality === 'sitter') {
+      responseChance = distance < 150 ? 0.2 : 0.05;
+    } else if (behavior.personality === 'follower' && behavior.followTarget === player) {
+      responseChance = 0.8; // Followers are very responsive
+    } else {
+      responseChance = distance < 200 ? 0.4 : distance < 300 ? 0.15 : 0.05;
+    }
+    
+    // Boost chance if already in conversation
+    if (behavior.conversationTarget === player && behavior.conversationTurn && behavior.conversationTurn < 5) {
+      responseChance = Math.min(0.9, responseChance * 1.8);
+    }
+    
+    // Specific phrases get higher response chance
+    if (specificPhrase) {
+      responseChance = Math.min(0.95, responseChance * 1.5);
+    }
+    
+    // Direct greeting to bot increases chance
+    if (messageType === 'greeting' && message.toLowerCase().includes(bot.penguin.name.toLowerCase())) {
+      responseChance = 0.95;
+    }
+    
+    // "follow me" has special behavior
+    if (specificPhrase === 'follow me' && !behavior.followTarget) {
+      if (behavior.personality === 'follower' || behavior.personality === 'socializer') {
+        responseChance = 0.85; // Very high chance
+      }
+    }
+    
+    // Boost chance for timeline-aware and time traveler messages
+    if (timelinePhrase || timeTravelerType) {
+      responseChance = Math.min(0.95, responseChance * 1.5);
+    }
+    
+    if (Math.random() < responseChance) {
+      // Get appropriate response
+      let response: string | null = null;
+      
+      // Priority: timeline-aware > time traveler > specific phrase > general message type
+      if (timelinePhrase) {
+        response = getTimelineAwareResponse(timelinePhrase, version, behavior.age);
+      } else if (timeTravelerType) {
+        // Decide if bot is believer or skeptic
+        const dialogueAge = getDialogueAge(behavior.age);
+        const isBeliever = Math.random() < (dialogueAge === 'child' ? 0.6 : dialogueAge === 'preteen' ? 0.3 : 0.15);
+        const responseType = isBeliever ? 'believer' : 'skeptic';
+        const responses = DIALOGUE.timeTraveler[timeTravelerType][responseType][dialogueAge];
+        response = responses[randomInt(0, responses.length - 1)];
+      } else if (specificPhrase) {
+        const dialogueAge = getDialogueAge(behavior.age);
+        const responses = DIALOGUE.specificPhrases[specificPhrase][dialogueAge];
+        response = responses[randomInt(0, responses.length - 1)];
+      } else if (messageType) {
+        const dialogueAge = getDialogueAge(behavior.age);
+        const responses = DIALOGUE.conversationResponses[messageType][dialogueAge];
+        if (responses) {
+          response = responses[randomInt(0, responses.length - 1)];
+        }
+      }
+      
+      if (!response) return;
+      
+      // Capture response as string for closure
+      const chatResponse: string = response;
+      
+      // Mark conversation
+      behavior.conversationTarget = player;
+      behavior.conversationTurn = (behavior.conversationTurn || 0) + 1;
+      behavior.lastMessageReceived = message;
+      
+      // Send response with delay
+      setTimeout(() => {
+        if (bot.room === player.room) {
+          botSendChat(bot, chatResponse);
+          
+          // Special handling for "follow me"
+          if (specificPhrase === 'follow me' && !behavior.followTarget) {
+            if (behavior.personality === 'follower' || 
+                (behavior.personality === 'socializer' && Math.random() < 0.6)) {
+              behavior.followTarget = player;
+              behavior.followChance = behavior.personality === 'follower' ? 0.8 : 0.5;
+            }
+          }
+          
+          // Socializers and followers might initiate following
+          if ((behavior.personality === 'socializer' || behavior.personality === 'follower') && 
+              !behavior.followTarget && behavior.conversationTurn && behavior.conversationTurn >= 2) {
+            if (Math.random() < 0.3) {
+              behavior.followTarget = player;
+              behavior.followChance = behavior.personality === 'follower' ? 0.7 : 0.3;
+            }
+          }
+        }
+      }, randomInt(800, 2500));
+      
+      // Reset conversation after some time
+      setTimeout(() => {
+        if (behavior.conversationTarget === player) {
+          behavior.conversationTarget = undefined;
+          behavior.conversationTurn = 0;
+        }
+      }, 30000);
+    }
+  });
 }
 
 /**
@@ -2441,7 +3728,8 @@ function handleBetaBeggingBeta(player: Client, message: string) {
     
     // 70% chance to call out the irony
     if (Math.random() < 0.7) {
-      const reactions = DIALOGUE.betaBeggingBeta[behavior.age];
+      const dialogueAge = getDialogueAge(behavior.age);
+      const reactions = DIALOGUE.betaBeggingBeta[dialogueAge];
       if (reactions) {
         const reaction = reactions[randomInt(0, reactions.length - 1)];
         setTimeout(() => {
@@ -2474,9 +3762,10 @@ function handleQuestionResponses(player: Client, message: string) {
       if (Math.random() > 0.3) return;
       
       // Get appropriate response based on timeline and bot age
+      const dialogueAge = getDialogueAge(behavior.age);
       const responseSet = isPostDisney 
-        ? DIALOGUE.questionResponses.developer.postDisney[behavior.age]
-        : DIALOGUE.questionResponses.developer.preRocketsnail[behavior.age];
+        ? DIALOGUE.questionResponses.developer.postDisney[dialogueAge]
+        : DIALOGUE.questionResponses.developer.preRocketsnail[dialogueAge];
       
       if (responseSet) {
         const response = responseSet[randomInt(0, responseSet.length - 1)];
@@ -2682,7 +3971,8 @@ function detectSnowballHit(room: any, targetX: number, targetY: number, thrower:
               
               // If 2+ kids nearby, use special mob pelted dialogue
               if (nearbyKids >= 2) {
-                reactions = DIALOGUE.betaMobPelted[behavior.age];
+                const dialogueAge = getDialogueAge(behavior.age);
+                reactions = DIALOGUE.betaMobPelted[dialogueAge];
               }
             }
           }
@@ -2691,9 +3981,10 @@ function detectSnowballHit(room: any, targetX: number, targetY: number, thrower:
           if (!reactions) {
             // Use different dialogue for Snow Forts (playful) vs other rooms (annoyed)
             const isSnowForts = room.id === ROOM_IDS.SNOW_FORTS;
+            const dialogueAge = getDialogueAge(behavior.age);
             reactions = isSnowForts 
-              ? DIALOGUE.snowballHitForts[behavior.age]
-              : DIALOGUE.snowballHit[behavior.age];
+              ? DIALOGUE.snowballHitForts[dialogueAge]
+              : DIALOGUE.snowballHit[dialogueAge];
           }
           
           if (reactions) {
@@ -2832,7 +4123,18 @@ handler.xt(Handle.GetCoins, (client) => {
 
 handler.xt(Handle.AddItemOld, (client, item) => {
   // TODO remove coins logic
-  client.buyItem(item);
+  const itemId = Number(item);
+  if (BAIT_ITEMS.has(itemId)) {
+    const reason = `Account banned for attempting to acquire bait item ${itemId}`;
+    const banResult = issueTemporaryBan(client.penguin.name, reason);
+    console.log(`[AutoBan] ${client.penguin.name} banned for purchasing bait item ${itemId}`);
+    const payload = banResult.code === 600 && banResult.expiresAt ? banResult.expiresAt : reason;
+    client.sendError(banResult.code, payload);
+    client.disconnect();
+    return;
+  }
+
+  client.buyItem(itemId);
   client.update();
 })
 
@@ -2861,6 +4163,17 @@ handler.xt(Handle.GetInventoryOld, (client) => {
 }, { once: true });
 
 handler.xt(Handle.SendMessageOld, (client, id, message) => {
+  const messageType = detectMessageType(message);
+  if (messageType === 'extremeProfanity') {
+    const banReason = `The server has automatically banned you for saying a bad word. You said: ${message}`;
+    const banResult = issueTemporaryBan(client.penguin.name, banReason);
+    console.log(`[AutoBan] ${client.penguin.name} banned for extreme profanity: ${message}`);
+    const payload = banResult.code === 600 && banResult.expiresAt ? banResult.expiresAt : banReason;
+    client.sendError(banResult.code, payload);
+    client.disconnect();
+    return;
+  }
+  
   client.sendMessage(message);
   
   // Check if player is expressing annoyance at bots
@@ -2880,9 +4193,19 @@ handler.xt(Handle.SendMessageOld, (client, id, message) => {
   
   // Timeline-aware question responses
   handleQuestionResponses(client, message);
+  
+  // Bot conversations - bots respond to player messages
+  handleBotConversations(client, message);
 });
 
-handler.xt(Handle.SendMessageOld, commandsHandler);
+handler.xt(Handle.SendMessageOld, (client, ...args) => {
+  if (!isAuthorized(client.penguin.name)) {
+    client.sendError(610, 'You are not authorized to use commands.');
+    return;
+  }
+
+  commandsHandler(client, ...args);
+});
 
 handler.xt(Handle.SetPositionOld, (client, ...args) => {
   client.setPosition(...args);
@@ -2944,11 +4267,62 @@ handler.listeners.set('s%st', [...stCallbacks, (client: Client, x: string, y: st
 
 // Logging in
 handler.post('/php/login.php', (body) => {
-  const { Username } = body;
-  const penguin = Client.getPenguinFromName(Username);
+  const { Username, Password } = body;
   
+  if (!Username || !Password) {
+    return '&e=100&em=Penguin%20not%20found'; // Penguin not found
+  }
+
+  if (Username.length > 12) {
+    console.log(`[Engine1] Denied login for ${Username}: nickname too long (${Username.length} chars)`);
+    return '&e=101&em=Nickname%20may%20not%20exceed%2012%20characters.';
+  }
+
+  const banStatus = getBanStatus(Username);
+  if (banStatus?.active) {
+    console.log(`[Engine1] Denied login for ${Username}: active ban (${banStatus.code})`);
+    const encodedMessage = encodeURIComponent(banStatus.message);
+    return `&e=${banStatus.code}&em=${encodedMessage}`;
+  }
+
+  if (isInappropriateUsername(Username)) {
+    const reason = `Account banned for inappropriate username: ${Username}`;
+    console.log(`[AutoBan] ${Username} instabanned for inappropriate username`);
+    setAccountBan(Username, reason, null);
+    const encodedReason = encodeURIComponent(reason);
+    return `&e=680&em=${encodedReason}`;
+  }
+
+  // Account verification/creation (same as XML login)
+  if (accountExists(Username)) {
+    // Account exists - verify password
+    if (!verifyAccount(Username, Password)) {
+      console.log(`[Engine1] Failed login attempt for ${Username}: incorrect password`);
+      return '&e=101&em=Incorrect%20Password.%5CnNOTE%3A%20Passwords%20are%20CaSe%20SeNsiTIVE';
+    }
+    console.log(`[Engine1] ${Username} logged in with existing account`);
+  } else {
+    // Account doesn't exist - create new account with this password
+    createAccount(Username, Password);
+    console.log(`[Engine1] ${Username} created new account`);
+  }
+
+  const penguin = Client.getPenguinFromName(Username);
+  const sessionKeys = createEngine1Session(Username);
+
+  const inventory = penguin.getItems();
+  const baitItem = inventory.find((itemId) => BAIT_ITEMS.has(itemId));
+  if (baitItem !== undefined) {
+    const reason = `Account banned for possessing bait item ${baitItem}`;
+    const banResult = issueTemporaryBan(Username, reason);
+    console.log(`[AutoBan] ${Username} banned for bait item ${baitItem}`);
+    const responsePayload = banResult.code === 600 && banResult.expiresAt ? banResult.expiresAt : reason;
+    const encodedReason = encodeURIComponent(responsePayload);
+    return `&e=${banResult.code}&em=${encodedReason}`;
+  }
+
   // Generate fake server populations for all servers
-  // Format: worldId|population,worldId|population,...
+  // Format: worldId| population,worldId| population...
   // Population ranges: 0-50 (empty), 50-100 (low), 100-200 (medium), 200-400 (busy), 400-500 (very busy), 500+ (full)
   const getEngine1Population = () => {
     const seed = Math.random();
@@ -2992,7 +4366,9 @@ handler.post('/php/login.php', (body) => {
   
   const params: Record<string, number | string> = {
     crumb: Client.engine1Crumb(penguin),
-    k1: 'a',
+    k1: sessionKeys.loginKey,
+    k2: sessionKeys.smartKey,
+    k3: randomToken(8),
     c: penguin.coins,
     s: 0, // SAFE MODE TODO in future?
     jd: getDateString(penguin.registrationTimestamp),

@@ -660,12 +660,16 @@ export class Penguin {
   }
 
   static getDefault(id: number, name: string, isMember: boolean): Penguin {
+    // Random color from 1-12 (blue, green, pink, black, red, orange, yellow, dark green, brown, peach, purple, lime)
+    const randomColor = Math.floor(Math.random() * 12) + 1;
+    const startingInventory: number[] = [randomColor];
+    
     return new Penguin(id, {
       name,
       is_member: isMember,
       is_agent: false,
       mascot: 0,
-      color: 1,
+      color: randomColor,
       head: 0,
       face: 0,
       neck: 0,
@@ -674,13 +678,13 @@ export class Penguin {
       feet: 0,
       pin: 0,
       background: 0,
-      coins: 500,
-      registration_date: Date.now(),
+      coins: 0,
       minutes_played: 0,
-      inventory: [1],
+      registration_date: Date.now(),
+      inventory: startingInventory,
       stamps: [],
       stampbook: { // TODO: enums for the options
-        color: 1,
+        color: randomColor,
         highlight: 1,
         pattern: 0,
         icon: 1,

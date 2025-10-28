@@ -15,6 +15,30 @@
 // -->
 </SCRIPT>
 
+<script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+<script>
+  // Configure Ruffle WebSocket proxy
+  window.RufflePlayer = window.RufflePlayer || {};
+  window.RufflePlayer.config = {
+    "socketProxies": [
+      {
+        "host": "125.168.206.149",
+        "port": 6114,
+        "proxyUrl": "ws://csiw6.net:7114"
+      },
+      {
+        "host": "125.168.206.149", 
+        "port": 6113,
+        "proxyUrl": "ws://csiw6.net:7113"
+      },
+      {
+        "host": "125.168.206.149",
+        "port": 6112,
+        "proxyUrl": "ws://csiw6.net:7112"
+      }
+    ]
+  };
+</script>
 
 </head>
 

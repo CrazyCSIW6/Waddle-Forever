@@ -61,13 +61,13 @@ function patchFrame(rooms: OldRoom[], frames: Partial<Record<RoomName, number>>)
 function getFileName(name: string, date: Version): string {
   // the way the client reads this XML changed
   if (isLower(date, Update.CHAT_339)) {
-    return `<File>${name}</File>`;
+    return name.replace('_', ' ');
   } else {
     return name;
   }
 }
 
-export function getSetupXml(version: Version, ip: string) {
+export function getSetupXml(version: Version, ip: string = 'localhost', useWebSocket: boolean = false): string {
   const news = findInVersion(version, newspaperTimeline);
 
   const rooms: OldRoom[] = Object.entries(ROOMS).filter((pair) => {
@@ -126,7 +126,7 @@ export function getSetupXml(version: Version, ip: string) {
         return `
       <${server}>
         <IP>${ip}</IP>
-        <Port>6114</Port>
+        <Port>${useWebSocket ? 7114 : 6114}</Port>
         <Zone>w1</Zone>
       </${server}>
         `

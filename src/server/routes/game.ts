@@ -75,7 +75,12 @@ export function createHttpServer(settingsManager: SettingsManager): HttpServer {
   });
   server.getData('servers.xml', (s) => getServersXml(s.targetIP));
   server.getData('setup.xml', (s) => {
-    return getSetupXml(s.settings.version, s.targetIP);
+    return getSetupXml(s.settings.version, s.targetIP, false);
+  });
+  
+  // Special setup.xml for WebSocket/Ruffle clients
+  server.getData('setup-ws.xml', (s) => {
+    return getSetupXml(s.settings.version, s.targetIP, true);
   });
   server.getData('version.txt', (s) => {
     return getVersionTxt(s.settings.version);

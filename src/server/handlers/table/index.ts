@@ -88,6 +88,20 @@ handler.boot((server) => {
   // PSA HQ (803) - 1 Mancala table
   const psaRoom = server.getRoom(803);
   psaRoom.addTable(new MancalaTable(105, psaRoom));
+
+  server.onReset(() => {
+    const resetBookRoom = server.getRoom(111);
+    for (let i = 100; i <= 104; i++) {
+      if (!resetBookRoom.getTable(i)) {
+        resetBookRoom.addTable(new MancalaTable(i, resetBookRoom));
+      }
+    }
+
+    const resetPsaRoom = server.getRoom(803);
+    if (!resetPsaRoom.getTable(105)) {
+      resetPsaRoom.addTable(new MancalaTable(105, resetPsaRoom));
+    }
+  });
 });
 
 export default handler;

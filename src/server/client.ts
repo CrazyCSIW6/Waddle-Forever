@@ -362,12 +362,15 @@ export class Server {
 
   private _waddleConstructors: WaddleConstructors | undefined;
 
+  private _resetCallbacks: Array<(server: Server) => void>;
+
   constructor(settings: SettingsManager) {
     this._settingsManager = settings;
     this._rooms = new Map<number, GameRoom>();
     this._igloos = new Map<number, Igloo>();
     this._playersById = new Map<number, Client>();
     this._followers = new Map<Client, Bot[]>();
+    this._resetCallbacks = [];
     this.init();
   }
 
@@ -398,6 +401,11 @@ export class Server {
     this._playersById = new Map<number, Client>();
     this._followers = new Map<Client, Bot[]>();
     this.init();
+    this._resetCallbacks.forEach((callback) => callback(this));
+  }
+
+  onReset(callback: (server: Server) => void): void {
+    this._resetCallbacks.push(callback);
   }
 
   setCardMatchmaker(matchMaker: MatchMaker) {

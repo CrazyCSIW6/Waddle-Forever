@@ -31,6 +31,14 @@ export const ROOM_UPDATES: RoomMap<RoomUpdate[]> = {
       fileRef: 'archives:ArtworkRoomsTown40.swf',
       date: Update.PRE_CPIP_REWRITE_DATE
     },
+    {
+      // should probably be labeled something else, this is town10 with the vectorized club lights
+	  // real town11 is halloween party 2005
+	  // september 30th date is speculative
+      fileRef: 'archives:ArtworkRoomsTown11.swf',
+      date: '2005-09-30',
+	  comment: 'The Night Club now has a hovering animation'
+    },
   ],
   rink: [
     {

@@ -3637,6 +3637,50 @@ function isAnnoyedMessage(message: string): boolean {
 /**
  * Check if a message is super vulgar/aggressive
  */
+const STREET_TYPES = [
+  'street', 'st', 'road', 'rd', 'lane', 'ln', 'avenue', 'ave', 'drive', 'dr', 'court', 'ct',
+  'boulevard', 'blvd', 'parkway', 'pkwy', 'circle', 'cir', 'place', 'pl', 'trail', 'trl',
+  'way', 'terrace', 'ter', 'square', 'sq', 'highway', 'hwy', 'row', 'crescent', 'cres', 'alley'
+];
+
+const ADDRESS_TRIGGERS = [
+  'i live at', 'i live on', 'i live in', 'i am at', 'come to', 'visit me at', 'my address',
+  'address is', 'house is at', 'house at', 'meet me at', 'come over to'
+];
+
+const SCHOOL_TERMS = [
+  'elementary', 'middle school', 'junior high', 'high school', 'secondary school', 'academy',
+  'prep school', 'primary school', 'school', 'college', 'university', 'campus'
+];
+
+const STATE_OR_CITY_NAMES = [
+  'alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado', 'connecticut', 'delaware',
+  'florida', 'georgia', 'hawaii', 'idaho', 'illinois', 'indiana', 'iowa', 'kansas', 'kentucky',
+  'louisiana', 'maine', 'maryland', 'massachusetts', 'michigan', 'minnesota', 'mississippi',
+  'missouri', 'montana', 'nebraska', 'nevada', 'new hampshire', 'new jersey', 'new mexico',
+  'new york', 'north carolina', 'north dakota', 'ohio', 'oklahoma', 'oregon', 'pennsylvania',
+  'rhode island', 'south carolina', 'south dakota', 'tennessee', 'texas', 'utah', 'vermont',
+  'virginia', 'washington', 'west virginia', 'wisconsin', 'wyoming',
+  'ontario', 'quebec', 'british columbia', 'alberta', 'manitoba', 'saskatchewan', 'nova scotia',
+  'new brunswick', 'newfoundland', 'labrador', 'prince edward island', 'pei', 'yukon', 'nunavut',
+  'northwest territories',
+  'new south wales', 'victoria', 'queensland', 'south australia', 'western australia', 'tasmania',
+  'northern territory', 'australian capital territory',
+  'new york city', 'los angeles', 'chicago', 'houston', 'phoenix', 'philadelphia', 'san antonio',
+  'san diego', 'dallas', 'san jose', 'austin', 'jacksonville', 'san francisco', 'seattle',
+  'denver', 'miami', 'boston', 'atlanta', 'orlando', 'detroit', 'minneapolis', 'st paul',
+  'toronto', 'vancouver', 'montreal', 'ottawa', 'winnipeg', 'calgary', 'edmonton',
+  'sydney', 'melbourne', 'brisbane', 'perth', 'adelaide', 'canberra',
+  'auckland', 'wellington', 'christchurch',
+  'london', 'manchester', 'birmingham', 'liverpool', 'leeds', 'glasgow', 'edinburgh',
+  'dublin', 'belfast', 'paris'
+];
+
+const LOCATION_INDICATORS = [
+  'live in', 'live at', 'living in', 'from', 'stay in', 'stay at', 'moving to', 'relocating to',
+  'based in', 'visiting', 'grew up in'
+];
+
 function normalizeForFilter(input: string): string {
   return input
     .toLowerCase()
@@ -3652,6 +3696,88 @@ function normalizeForFilter(input: string): string {
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function containsPersonalInfo(originalMessage: string, normalizedMessage: string): boolean {
+  const lowerMessage = originalMessage.toLowerCase();
+
+  const emailRegex = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+  if (emailRegex.test(originalMessage)) {
+    return true;
+  }
+
+  if (/\b\d{6,}\b/.test(originalMessage)) {
+    return true;
+  }
+
+  if (/\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/.test(originalMessage)) {
+    return true;
+  }
+
+  const digitsOnly = originalMessage.replace(/\D/g, '');
+  if (digitsOnly.length >= 6) {
+    return true;
+  }
+
+  const phoneContextRegex = /\b(phone|call|text|cell|mobile|number|contact|reach|dm|pm|message|hit me up|hmu)\b/;
+  if (digitsOnly.length >= 7 && phoneContextRegex.test(normalizedMessage)) {
+    return true;
+  }
+
+  if (ADDRESS_TRIGGERS.some(phrase => lowerMessage.includes(phrase)) && STREET_TYPES.some(type => new RegExp(`\\b${type}\\b`).test(lowerMessage))) {
+    return true;
+  }
+
+  if (STREET_TYPES.some(type => new RegExp(`\\b[a-z0-9]+\\s+${type}\\b`).test(lowerMessage))) {
+    return true;
+  }
+
+  if (/\b(i[' ]?m|i am|im)\s+[a-z0-9-]+\s*(years? old|yrs? old)\b/.test(lowerMessage)) {
+    return true;
+  }
+
+  const addressWithNumberRegex = new RegExp(`\\b\\d{1,4}\\s+(?:[a-z]+\\s){0,3}(?:${STREET_TYPES.join('|')})\\b`, 'i');
+  if (addressWithNumberRegex.test(originalMessage)) {
+    return true;
+  }
+
+  if (SCHOOL_TERMS.some(term => new RegExp(`\\b(?:my|the|at|from|in)\\s+(?:[a-z0-9'\\-\\s]+)?${term}\\b`, 'i').test(originalMessage))) {
+    return true;
+  }
+
+  const locationMatch = LOCATION_INDICATORS.some(indicator => lowerMessage.includes(indicator));
+  if (locationMatch) {
+    const indicatorIndex = LOCATION_INDICATORS.find(indicator => lowerMessage.includes(indicator));
+    if (indicatorIndex) {
+      const indicator = indicatorIndex;
+      const segment = lowerMessage.split(indicator).pop() ?? '';
+      if (segment) {
+        const firstWords = segment.trim().split(/[^a-z]+/).slice(0, 3);
+        const candidate = firstWords.filter(Boolean).join(' ').trim();
+        for (const name of STATE_OR_CITY_NAMES) {
+          if (candidate.startsWith(name)) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  for (const name of STATE_OR_CITY_NAMES) {
+    if (new RegExp(`\\b${name}\\b`).test(lowerMessage)) {
+      const locationContext = /(\blive\b|\bfrom\b|\bin\b|\bat\b|\bgoing to\b|\bheaded to\b)/;
+      if (locationContext.test(lowerMessage)) {
+        return true;
+      }
+    }
+  }
+
+  const contactHandleRegex = /(discord|skype|snapchat|instagram|insta|kik|aim|msn|icq|email)\b/;
+  if (contactHandleRegex.test(normalizedMessage) && /[:@#]/.test(originalMessage)) {
+    return true;
+  }
+
+  return false;
 }
 
 function isSuperVulgar(message: string): boolean {
@@ -4601,7 +4727,15 @@ handler.xt(Handle.GetInventoryOld, (client) => {
 }, { once: true });
 
 handler.xt(Handle.SendMessageOld, (client, id, message) => {
+  const normalizedMessage = normalizeForFilter(message);
+
+  if (containsPersonalInfo(message, normalizedMessage)) {
+    client.sendError(913, 'For your safety, personal information cannot be shared.');
+    return;
+  }
+
   const messageType = detectMessageType(message);
+
   if (messageType === 'extremeProfanity') {
     const banReason = `The server has automatically banned you for saying a bad word. You said: ${message}`;
     const banResult = issueTemporaryBan(client.penguin.name, banReason);
@@ -4614,7 +4748,6 @@ handler.xt(Handle.SendMessageOld, (client, id, message) => {
   }
   
   client.sendMessage(message);
-  
   // Check if player is expressing annoyance at bots
   if (isAnnoyedMessage(message)) {
     handleAnnoyingBotReaction(client, message);

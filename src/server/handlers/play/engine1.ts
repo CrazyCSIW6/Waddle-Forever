@@ -908,7 +908,7 @@ function spawnSingleBot(room: any, serverPopulation: number) {
   applyIcebergTippingBehavior(bot, room, intervals);
   
   // Kids and preteens are OBSESSED with party hats (beta testers), but only post-beta (>= 2005-10-24)
-  if (isGreaterOrEqual(version, '2005-10-24') && (age === 'child' || age === 'preteen') && !hasBetaHat) {
+  if (isPostOfficialLaunch(version) && (age === 'child' || age === 'preteen') && !hasBetaHat) {
     applyPartyHatAttractionBehavior(bot, room, intervals, age);
   }
   
@@ -2843,9 +2843,15 @@ function detectEasterEggItems(room: any): Client | null {
 /**
  * Check if any player has party hat (after Oct 24, 2005)
  */
+function isPostOfficialLaunch(version: Version): boolean {
+  return isGreaterOrEqual(version, '2005-10-24');
+}
+
 function detectBetaHat(room: any, currentDate: Date): Client | null {
-  const betaPartyEnd = new Date('2005-10-24');
-  if (currentDate <= betaPartyEnd) return null;
+  const version = room.server?.settings.version;
+  if (!version || !isPostOfficialLaunch(version)) {
+    return null;
+  }
   
   const allPenguins = [...room.players, ...room.botGroup.bots];
   for (const penguin of allPenguins) {

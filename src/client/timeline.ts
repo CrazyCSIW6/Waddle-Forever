@@ -46,6 +46,12 @@ export function createTimelinePicker (mainWindow: BrowserWindow) {
         }
       },
       {
+        date: '2007-08-01',
+        events: {
+          other: ['Disney acquires Club Penguin'],
+        }
+      },
+      {
         date: '2010-01-08',
         events: {
           other: ['A rockslide appears in the Mine']

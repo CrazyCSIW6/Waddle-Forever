@@ -289,8 +289,8 @@ function selectWeightedItem(items: CatalogItem[]): CatalogItem | null {
 handler.xt(Handle.JoinServerOld, (client) => {
   // This is supposed to get the server population of the server the player clicked on
   // For now, just set the population to a fixed count
-  const serverPopulation = 50;
-  clientServerPopulation.set(client, 50);
+  const serverPopulation = 420;
+  clientServerPopulation.set(client, 420);
 
   resetAllRoomBots(client.server);
 
@@ -827,7 +827,10 @@ const DIALOGUE = {
   child: {
     greetings: [
       'hi', 'hello', 'hey', 'hi everyone', 'sup', 'hiii', 'heyyy', 'hi guys', 
-      'helo', 'hai', 'yo', 'hiya', 'greetings', 'hi everybody', 'wave'
+      'helo', 'hai', 'yo', 'hiya', 'greetings', 'hi everybody', 'wave',
+      'hey there', 'hi friend', 'hello friend', 'sup guys', 'hey yall', 'hi hi',
+      'howdy', 'hey hey', 'hi there', 'hiya everyone', 'greetings friends',
+      'hello hello', 'hey everybody', 'hi pals', 'sup everyone'
     ],
     general: [
       'THIS IS SO FUN', 'i love this game so much', 'wanna be friends??', 'COOL', 'lol!!!', 'hahaha', 'OMG', 'WOW',
@@ -837,7 +840,11 @@ const DIALOGUE = {
       'my mom said i can only play for 30 minutes :(', 'my big brother showed me this', 
       'im 8', 'im 9', 'first time playing', 'i just started',
       'where did everyone go', 'come back', 'follow me!!!', 'wait for me!!!', 'dont leave me',
-      'im bored now', 'what should we do', 'ok nvm this is fun again'
+      'im bored now', 'what should we do', 'ok nvm this is fun again',
+      'this game is amazing', 'i cant stop playing', 'so many cool things', 'everything is fun here',
+      'penguins are awesome', 'i love the colors', 'lets have a party', 'wanna dance?', 'look at that',
+      'im so happy', 'this is the best day ever', 'yipee!', 'super fun time', 'exciting stuff',
+      'awesome adventures', 'cool penguins everywhere', 'best game in the world', 'never wanna leave'
     ],
     questions: [
       'what do you do in this game??', 'how do i get coins??', 'wheres the pizza place?', 'wanna play something??',
@@ -845,13 +852,18 @@ const DIALOGUE = {
       'can i change my color??', 'how do you change color??',
       'where do i buy clothes??', 'can you show me around??', 'what room is this??', 'how do i get out of here??',
       'how do you dance??', 'where did you get that??', 'can i have that??', 'will you give me coins pls??',
-      'who made this game??', 'who made this??', 'whos the owner??'
+      'who made this game??', 'who made this??', 'whos the owner??',
+      'what should we play?', 'wanna be buddies?', 'how do you get rich?', 'whats your favorite color?',
+      'can you help me?', 'where do you live?', 'what grade are you in?', 'do you like school?',
+      'wanna trade?', 'how do you level up?', 'whats the best room?', 'can we team up?'
     ]
   },
   preteen: {
     greetings: [
       'hey', 'hi', 'sup', 'whats up', 'yo', 'hey guys', 'wassup', 'heyo', 
-      'sup everyone', 'hey there', 'hi all', 'ayy', 'yoo', 'hey yall'
+      'sup everyone', 'hey there', 'hi all', 'ayy', 'yoo', 'hey yall',
+      'whats good', 'hey peeps', 'sup yall', 'yo whats up', 'hey everyone',
+      'hi guys', 'sup dudes', 'hey squad', 'whats cracking', 'hey crew'
     ],
     general: [
       'lol', 'thats cool', 'nice', 'awesome', 'this is actually cool', 'haha', 'rofl', 'lmao', 'brb',
@@ -861,20 +873,28 @@ const DIALOGUE = {
       'grinding for coins', 'saving up for something', 'gonna buy stuff soon', 'i need more coins',
       'anyone wanna hang', 'im 12 btw', 'im 13', 'any other middle schoolers',
       'school was so boring today', 'homework sucks so bad', 'cant wait for the weekend',
-      'parents make me do homework first', 'gotta go to dinner soon', 'parents calling me'
+      'parents make me do homework first', 'gotta go to dinner soon', 'parents calling me',
+      'this is addicting', 'cant stop playing', 'so many levels', 'epic battles', 'sweet graphics',
+      'music is fire', 'best game ever', 'friends play this too', 'online gaming rocks',
+      'so much to explore', 'secret areas everywhere', 'collecting all the stuff'
     ],
     questions: [
       'how do i get more coins?', 'whats the fastest way to get coins?', 'where do i buy stuff?', 
       'does anyone have membership?', 'is membership actually worth it?', 'how much is membership?', 
       'anyone know any cheats lol?', 'are there any secret rooms?',
       'wanna add me as a friend?', 'be buddies?',
-      'how do i go to different rooms?', 'where should i go?', 'whats actually fun to do here?'
+      'how do i go to different rooms?', 'where should i go?', 'whats actually fun to do here?',
+      'whats the best strategy?', 'anyone wanna team up?', 'got any tips?', 'how do you unlock stuff?',
+      'whats your favorite part?', 'seen any glitches?', 'wanna trade items?', 'how do you get rare stuff?',
+      'whats the highest level?', 'anyone know easter eggs?', 'how do you make friends here?'
     ]
   },
   teen: {
     greetings: [
       'hey', 'hi', 'sup', 'whats up', 'hey guys', 'yo', 'whats good', 
-      'sup yall', 'evening', 'afternoon', 'morning', 'hey everyone'
+      'sup yall', 'evening', 'afternoon', 'morning', 'hey everyone',
+      'whats cracking', 'hey peeps', 'yo whats up', 'sup crew', 'hey squad',
+      'evening all', 'afternoon everyone', 'morning folks'
     ],
     general: [
       'actually pretty cool', 'not gonna lie this is fun', 'lol', 'haha', 'this game is actually fun', 'interesting concept', 'whatever',
@@ -885,7 +905,11 @@ const DIALOGUE = {
       'my little sister plays this', 'babysitting and decided to try it',
       'this is actually relaxing', 'good way to zone out', 'beats scrolling myspace',
       'any high schoolers here?', 'junior here', 'senior year',
-      'college apps are killing me', 'SATs were brutal', 'anything to avoid studying'
+      'college apps are killing me', 'SATs were brutal', 'anything to avoid studying',
+      'graphics are decent', 'nostalgic vibes', 'simpler times', 'not bad for free',
+      'community is chill', 'some cool people here', 'random but fun',
+      'been hooked lately', 'cant stop coming back', 'guilty pleasure',
+      'better than some other games', 'surprisingly engaging', 'worth the time'
     ],
     questions: [
       'anyone else here from the forums?', 'is there a guide for this game?', 'what are you supposed to do here?',
@@ -893,13 +917,19 @@ const DIALOGUE = {
       'how active is the community?', 'worth getting into?', 'any updates planned?',
       'how long have you been playing?', 'whats your main goal here?',
       'any pro tips?', 'whats the meta?', 'best strategy for coins?',
-      'membership benefits worth it?', 'any rare items?', 'trading system exist?'
+      'membership benefits worth it?', 'any rare items?', 'trading system exist?',
+      'whats your favorite server?', 'any good clans?', 'how do you make money in game?',
+      'seen any rare stuff?', 'whats the rarest item?', 'any secret areas?',
+      'how do you unlock everything?', 'best grinding spots?', 'any exploits?',
+      'whats changed since beta?', 'how has it evolved?', 'any upcoming features?'
     ]
   },
   adult: {
     greetings: [
       'hello', 'hi', 'hey', 'hey everyone', 'hi there',
-      'hi folks', 'afternoon', 'evening', 'howdy', 'sup'
+      'hi folks', 'afternoon', 'evening', 'howdy', 'sup',
+      'good day', 'pleasant day', 'how are you', 'nice to see you', 'greetings',
+      'good afternoon', 'good evening', 'hello there', 'hi all', 'hey folks'
     ],
     general: [
       'this is actually fun', 'not bad', 'pretty charming', 'my kid loves this game',
@@ -909,7 +939,12 @@ const DIALOGUE = {
       'nice community', 'better than TV', 'glad this exists', 'wholesome game',
       'no violence which is nice', 'relaxing',
       'on my break', 'coffee break', 'unwinding',
-      'killing time', 'oddly addicting', 'weirdly enjoyable'
+      'killing time', 'oddly addicting', 'weirdly enjoyable',
+      'quite pleasant', 'rather engaging', 'surprisingly entertaining',
+      'good family game', 'safe online environment', 'positive community',
+      'well designed', 'creative concepts', 'impressive for its time',
+      'nostalgic feel', 'brings back memories', 'timeless appeal',
+      'excellent for kids', 'educational elements', 'social skills development'
     ],
     questions: [
       'is this okay for kids?', 'hows the membership work?', 'whats the point of this game?',
@@ -917,7 +952,12 @@ const DIALOGUE = {
       'how do i check what my kid is doing?', 'any bad content?',
       'how much is membership?', 'any hidden fees?',
       'how do i save progress?', 'how to reset password?',
-      'who made this?', 'how long has this been around?'
+      'who made this?', 'how long has this been around?',
+      'is it still being updated?', 'what are the safety features?', 'how does moderation work?',
+      'any educational value?', 'is there customer support?', 'how do i contact support?',
+      'what are the system requirements?', 'is it compatible with my device?', 'any mobile version?',
+      'how does the economy work?', 'are there microtransactions?', 'whats the business model?',
+      'how has it changed over time?', 'what was it like originally?', 'any upcoming changes?'
     ]
   },
   
@@ -2239,19 +2279,31 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
     if (dialogueAge === 'child') {
       timelineMessages.push('HAPPY NEW YEAR!!!', 'ITS 2006!!!', 'countdown was so exciting', 'fireworks everywhere!',
         '2005 was awesome', 'new year party time', 'year of the puffle?', 'cant wait for 2006!',
-        'midnight countdown was fun', 'new year resolution: be happy!', 'happy new year everyone!');
+        'midnight countdown was fun', 'new year resolution: be happy!', 'happy new year everyone!',
+        'best countdown ever!', 'fireworks lit up the sky!', 'what year is it now?', '2006 sounds cool!',
+        'new year means new fun!', 'did you stay up late?', 'resolution: play more games!', 'yay 2006!',
+        'party hats everywhere!', 'balloons and confetti!', 'new year dance party!', 'counting down was the best!');
     } else if (dialogueAge === 'preteen') {
       timelineMessages.push('new years eve was epic!', 'countdown to 2006!', 'fireworks show was amazing',
         '2005 was pretty cool', 'new year party was fun', 'year of the puffle maybe?', 'excited for next year',
-        'midnight fireworks rocked', 'new year resolution time', 'happy new year!');
+        'midnight fireworks rocked', 'new year resolution time', 'happy new year!',
+        'best fireworks ive seen!', 'did you watch the countdown?', 'what was your resolution?', '2006 gonna be awesome!',
+        'new year means new adventures!', 'stayed up till midnight', 'fireworks were spectacular!', 'party was lit!',
+        'new years kiss?', 'resolution: be the best player!', 'cant believe its 2006 already!');
     } else if (dialogueAge === 'teen') {
       timelineMessages.push('new years countdown was cool', '2006 is here!', 'fireworks were nice',
         '2005 recap: pretty good year', 'new year party was okay', 'year of the puffle?', 'looking forward to 2006',
-        'midnight countdown was fun', 'resolutions for next year', 'happy new year');
+        'midnight countdown was fun', 'resolutions for next year', 'happy new year',
+        'fireworks display was impressive', 'did you make resolutions?', 'what are you looking forward to?', '2006 predictions?',
+        'new year fresh start', 'countdown was exciting', 'party had good vibes', 'resolution: level up more',
+        'new year means new goals', 'fireworks were beautiful', 'celebration was nice');
     } else if (dialogueAge === 'adult') {
       timelineMessages.push('new year celebration was pleasant', '2006 has arrived', 'fireworks display was nice',
         'reflecting on 2005 positively', 'new year festivities enjoyable', 'year of the puffle perhaps',
-        'anticipating 2006 developments', 'midnight fireworks were lovely', 'new year resolutions made');
+        'anticipating 2006 developments', 'midnight fireworks were lovely', 'new year resolutions made',
+        'festive atmosphere prevailed', 'did you watch the fireworks?', 'what resolutions did you make?', '2006 outlook positive',
+        'new year brings new opportunities', 'countdown was well executed', 'celebration appropriately festive',
+        'resolution: continued enjoyment', 'new year reflections complete', 'fireworks were spectacular');
     }
   }
   
@@ -2260,19 +2312,31 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
     if (dialogueAge === 'child') {
       timelineMessages.push('OMG NEW GAMES!!!', 'so many more games now!', 'puffles are getting awesome!',
         'more parties coming soon!', 'member rooms sound cool', 'new necklaces and shoes!', 'accessories are the best!',
-        'check the newspaper now!', 'issue 12 is here!', 'more fun stuff everywhere!');
+        'check the newspaper now!', 'issue 12 is here!', 'more fun stuff everywhere!',
+        'games games games!', 'puffle updates are cool!', 'parties make me happy!', 'member areas sound fun!',
+        'bling bling accessories!', 'shoes are so pretty!', 'what new games are there?', 'puffles getting better?',
+        'more parties please!', 'newspaper has secrets!', 'accessories for everyone!', 'games are my favorite!');
     } else if (dialogueAge === 'preteen') {
       timelineMessages.push('newspaper has tons of new games!', 'puffles getting way better', 'more parties announced!',
         'members only areas opening', 'new accessories like necklaces!', 'shoes and cool clothing',
-        'check out issue 12!', 'exciting updates!', 'game is growing fast!');
+        'check out issue 12!', 'exciting updates!', 'game is growing fast!',
+        'so many new games to try!', 'puffle features expanding!', 'party planning time!', 'members only is exclusive!',
+        'accessories are trendy!', 'clothing updates are nice!', 'what games are new?', 'puffles need more stuff?',
+        'more parties mean more fun!', 'newspaper is packed with news!', 'fashion updates!', 'game improvements!');
     } else if (dialogueAge === 'teen') {
       timelineMessages.push('newspaper issue 12 out!', 'tons of new games added!', 'puffle features expanding!',
         'more party events coming!', 'members only content!', 'new accessory items!', 'necklaces and shoes!',
-        'good updates!', 'game growing fast!');
+        'good updates!', 'game growing fast!',
+        'new game selection impressive!', 'puffle system upgrades!', 'party schedule filling up!', 'members exclusive areas!',
+        'accessory catalog expanded!', 'clothing options increased!', 'which games are you trying?', 'puffle updates detailed?',
+        'more events to attend!', 'newspaper well written!', 'style improvements!', 'development team working hard!');
     } else if (dialogueAge === 'adult') {
       timelineMessages.push('newspaper issue 12 released!', 'significant game expansion!', 'puffle system enhancements!',
         'increased party content!', 'members only areas!', 'new accessory catalog!', 'necklaces and footwear!',
-        'positive development!', 'community growing!');
+        'positive development!', 'community growing!',
+        'game portfolio substantially increased!', 'puffle mechanics refined!', 'party frequency elevated!', 'members exclusive zones!',
+        'accessory inventory expanded!', 'clothing variety enhanced!', 'which new features appeal most?', 'puffle system analysis?',
+        'event calendar enriched!', 'publication informative!', 'design improvements noted!', 'team productivity evident!');
     }
   }
   
@@ -2281,19 +2345,35 @@ function getTimelineDialogue(version: Version, age: BotAge): string[] {
     if (dialogueAge === 'child') {
       timelineMessages.push('poll says DOJO is the BEST!', 'night club is super popular!', 'coffee shop is awesome!',
         'ice rink is the WORST!', 'want puffle pet shop NOW!', 'swimming place would be FUN!',
-        'more free stuff PLEASE!', 'birthday parties sound AMAZING!', 'check the poll results!');
+        'more free stuff PLEASE!', 'birthday parties sound AMAZING!', 'check the poll results!',
+        'over 100 players voted!', 'dojo got 31 votes!', 'night club second place!', 'coffee shop third!',
+        'ice rink least favorite!', 'shops not popular!', 'puffle pet shop wanted!', 'swimming pool idea!',
+        'free presents please!', 'easter eggs everywhere!', 'arcade building cool!', 'bank for coins?',
+        'what did you vote for?', 'ice rink really worst?', 'puffles as pets!', 'more multiplayer!');
     } else if (dialogueAge === 'preteen') {
       timelineMessages.push('poll results are in issue 13!', 'most love dojo and night club!', 'coffee shop is totally popular!',
         'ice rink is the least favorite!', 'everyone wants puffle pet shop!', 'swimming area would be epic!',
-        'more free items and secrets!', 'big arcade building sounds awesome!', 'multiplayer games needed!');
+        'more free items and secrets!', 'big arcade building sounds awesome!', 'multiplayer games needed!',
+        '100+ players participated!', 'dojo dominated the poll!', 'night club close second!', 'lodge got votes too!',
+        'ice rink unpopular!', 'shops need work!', 'pet shop for puffles!', 'swimming facility requested!',
+        'free stuff and easter eggs!', 'mall shopping idea!', 'music in night club?', 'birthday celebrations!',
+        'what was your favorite?', 'ice rink improvements?', 'puffle ownership!', 'more locations!');
     } else if (dialogueAge === 'teen') {
       timelineMessages.push('newspaper has player poll results!', 'dojo wins as favorite place!', 'night club second most popular!',
         'ice rink is least liked!', 'pet shop for puffles is top suggestion!', 'swimming location requested a lot!',
-        'more free stuff and easter eggs wanted!', 'different night club music!', 'mall and bank suggestions!');
+        'more free stuff and easter eggs wanted!', 'different night club music!', 'mall and bank suggestions!',
+        'survey reached over 100 players!', 'dojo clear favorite!', 'night club social hub!', 'ski hill got votes!',
+        'ice rink needs changes!', 'shops unpopular!', 'puffle pet system!', 'swimming area proposal!',
+        'free content increase!', 'arcade entertainment!', 'banking features!', 'birthday party events!',
+        'what place do you prefer?', 'ice rink improvements?', 'puffle companions!', 'expanded world!');
     } else if (dialogueAge === 'adult') {
       timelineMessages.push('issue 13 contains player poll results!', 'favorite places: dojo, night club, coffee shop!',
         'least favorite: ice rink, shops, dojo!', 'top suggestion: puffle pet shop!', 'more locations and games requested!',
-        'swimming facility proposed!', 'increased free content desired!', 'arcade, bank, mall suggestions noted!');
+        'swimming facility proposed!', 'increased free content desired!', 'arcade, bank, mall suggestions noted!',
+        'comprehensive player survey!', 'dojo overwhelmingly popular!', 'night club social center!', 'lodge ski hill noted!',
+        'ice rink requires attention!', 'shops need improvement!', 'puffle pet ownership!', 'aquatic facility suggestion!',
+        'free item distribution!', 'entertainment complex!', 'financial institution!', 'celebration events!',
+        'what location preferences?', 'ice rink enhancement?', 'puffle relationship system!', 'world expansion!');
     }
   }
   
@@ -3318,6 +3398,23 @@ function isAnnoyedMessage(message: string): boolean {
 /**
  * Check if a message is super vulgar/aggressive
  */
+function normalizeForFilter(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[@4]/g, 'a')
+    .replace(/[3]/g, 'e')
+    .replace(/[1!|l]/g, 'i')
+    .replace(/[0]/g, 'o')
+    .replace(/[5$]/g, 's')
+    .replace(/[7+]/g, 't')
+    .replace(/[2]/g, 'z')
+    .replace(/[8]/g, 'b')
+    .replace(/[69]/g, 'g')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function isSuperVulgar(message: string): boolean {
   const superVulgarPhrases = [
     'kill yourself', 'kys', 'fuck off cunt', 'fucking cunt',
@@ -3328,7 +3425,8 @@ function isSuperVulgar(message: string): boolean {
   ];
   
   const lowerMessage = message.toLowerCase();
-  return superVulgarPhrases.some(phrase => lowerMessage.includes(phrase));
+  const normalizedMessage = normalizeForFilter(message);
+  return superVulgarPhrases.some(phrase => lowerMessage.includes(phrase) || normalizedMessage.includes(phrase));
 }
 
 /**
@@ -3348,7 +3446,8 @@ export function isInappropriateUsername(username: string | undefined): boolean {
   ];
   
   const lowerUsername = username.toLowerCase();
-  return inappropriateWords.some(word => lowerUsername.includes(word));
+  const normalizedUsername = normalizeForFilter(username);
+  return inappropriateWords.some(word => lowerUsername.includes(word) || normalizedUsername.includes(word));
 }
 
 /**
@@ -3386,9 +3485,11 @@ function isDeveloperQuestion(message: string): boolean {
  */
 function detectMessageType(message: string): 'greeting' | 'question' | 'thanks' | 'goodbye' | 'followup' | 'compliment' | 'insult' | 'excitement' | 'confusion' | 'agreement' | 'disagreement' | 'laugh' | 'profanity' | 'extremeProfanity' | null {
   const lowerMessage = message.toLowerCase();
+  const normalizedMessage = normalizeForFilter(message);
   
   // Extreme profanity / slurs (check first, highest priority)
-  if (/\b(nigger|nigga|faggot|fag|retard|retarded|kys|kill yourself|cunt|bitch)\b/.test(lowerMessage)) {
+  if (/\b(nigger|niggers|nigga|niggaz|niggar|faggot|faggots|fag|fags|retard|retards|retarded|kys|kill yourself|cunt|cunts|bitch|bitches|chink|chinks|gook|gooks|spic|spics|kike|kikes|wop|wops|dago|dagos|jap|japs|homo|homos|homo's|homosexual|homosexuals|niggerfaggot|niggerfaggots|cocksucker|cocksuckers|rape|rapes|raped|raping|rapist|rapists|pedo|pedos|pedophile|pedophiles|ped0|ped0phile|p3do|p3d0|p3d0phile|child molester|child molesters|molesters|molester|molestor|molestors|molested|molesting|molest|bomb threat|bomb threats|jihad|jihadist|terrorist|terrorists|gas chamber|gas chambers|oven|ovens|final solution|hang yourself|hang yoself|shoot yourself|shoot yoself|jump off a bridge|incest|bestiality|necrophilia|heroin|meth|crack|cocaine|pedobear|child porn|child pornography|loli|lolicon|shota|shotacon|hentai rape|dark web|deep web|hitler|hitlers|swastika|swastikas|nazi|nazis|kkk|lynch|slave|slaves|plantation|plantations|n1gger|n1ggers|n1gga|n1ggaz|nvgger|nvgger|nvggers|f@g|f@gs|r3tard|r3tards|b1tch|b1tches|cuntz|faggit|faggits|retardid|retardz|touch kids|touched kids|touching kids|touches kids|touch children|touching children|touch little kids|touch little children|kid toucher|kid touchers|kids toucher|child rape|child rapes|child raped|child raping|child rapist|child rapists|child raper|child rapers|child rapper|cumdump|cumdumpster|cum dumpsters|cumdumpsters|cum dumpster|czmdzmpster)\b/.test(lowerMessage) ||
+      /\b(nigger|niggers|nigga|niggaz|niggar|faggot|faggots|fag|fags|retard|retards|retarded|kys|kill yourself|cunt|cunts|bitch|bitches|chink|chinks|gook|gooks|spic|spics|kike|kikes|wop|wops|dago|dagos|jap|japs|homo|homos|homo's|homosexual|homosexuals|niggerfaggot|niggerfaggots|cocksucker|cocksuckers|rape|rapes|raped|raping|rapist|rapists|pedo|pedos|pedophile|pedophiles|ped0|ped0phile|p3do|p3d0|p3d0phile|child molester|child molesters|molesters|molester|molestor|molestors|molested|molesting|molest|bomb threat|bomb threats|jihad|jihadist|terrorist|terrorists|gas chamber|gas chambers|oven|ovens|final solution|hang yourself|hang yoself|shoot yourself|shoot yoself|jump off a bridge|incest|bestiality|necrophilia|heroin|meth|crack|cocaine|pedobear|child porn|child pornography|loli|lolicon|shota|shotacon|hentai rape|dark web|deep web|hitler|hitlers|swastika|swastikas|nazi|nazis|kkk|lynch|slave|slaves|plantation|plantations|n1gger|n1ggers|n1gga|n1ggaz|nvgger|nvgger|nvggers|f@g|f@gs|r3tard|r3tards|b1tch|b1tches|cuntz|faggit|faggits|retardid|retardz|touch kids|touched kids|touching kids|touches kids|touch children|touching children|touch little kids|touch little children|kid toucher|kid touchers|kids toucher|child rape|child rapes|child raped|child raping|child rapist|child rapists|child raper|child rapers|child rapper|cumdump|cumdumpster|cum dumpsters|cumdumpsters|cum dumpster|czmdzmpster)\b/.test(normalizedMessage)) {
     return 'extremeProfanity';
   }
   
@@ -4266,7 +4367,8 @@ handler.xt(Handle.SendMessageOld, (client, id, message) => {
     const banReason = `The server has automatically banned you for saying a bad word. You said: ${message}`;
     const banResult = issueTemporaryBan(client.penguin.name, banReason);
     console.log(`[AutoBan] ${client.penguin.name} banned for extreme profanity: ${message}`);
-    const payload = banResult.code === 600 && banResult.expiresAt ? banResult.expiresAt : banReason;
+    const payload = banResult.expiresAt ?? banReason;
+    setAccountBan(client.penguin.name, payload, banResult.expiresAt);
     client.sendError(banResult.code, payload);
     client.disconnect();
     return;

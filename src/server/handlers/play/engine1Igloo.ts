@@ -33,6 +33,7 @@ handler.xt(Handle.JoinPlayerRoomOld, (client, playerId) => {
     
     // Join the igloo room (room ID is player ID + 1000)
     const iglooRoomId = id + 1000;
+    client.server.getRoom(iglooRoomId);
     client.joinRoom(iglooRoomId);
   } else {
     // Try to get another player's igloo
@@ -54,6 +55,7 @@ handler.xt(Handle.JoinPlayerRoomOld, (client, playerId) => {
       
       // Join the igloo room (room ID is player ID + 1000)
       const iglooRoomId = id + 1000;
+      client.server.getRoom(iglooRoomId);
       client.joinRoom(iglooRoomId);
     } catch (error) {
       // Igloo not open - don't send an error, just don't join

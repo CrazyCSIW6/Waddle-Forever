@@ -10,7 +10,7 @@ type PuckState = {
 };
 
 // Default puck position at center of rink bounds
-const DEFAULT_PUCK_STATE: PuckState = { x: 360, y: 240 };
+const DEFAULT_PUCK_STATE: PuckState = { x: 390, y: 170 };
 
 let puckState: PuckState = { ...DEFAULT_PUCK_STATE };
 

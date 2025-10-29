@@ -5,6 +5,7 @@ import { Update } from "./updates";
 
 /** All clothing catalogs that are released Pre-CPIP */
 export const PRE_CPIP_CATALOGS: DateRefMap = {
+  '2005-08-22': 'archives:August05Style.swf',
   '2005-09-21': 'archives:September05Style.swf',
   '2005-10-24': 'archives:Clothing_0510.swf',
   '2005-11-01': 'archives:Clothing_0511.swf',

@@ -747,11 +747,22 @@ export class Client {
   }
 
   joinRoom (room: number, x?: number, y?: number): void {
+    const sameRoom = this._currentRoom?.id === room;
+    if (sameRoom && !isGameRoom(room)) {
+      const xx = x ?? this.x;
+      const yy = y ?? this.y;
+      this.updateRoomInfo({ x: xx, y: yy });
+      this.setPosition(xx, yy);
+      return;
+    }
+
     // leaving previous room
     if (this._currentRoom !== undefined) {
       this.leaveRoom();
     }
-    this._currentRoom = this._server.getRoom(room);
+
+    const targetRoom = this._server.getRoom(room);
+    this._currentRoom = targetRoom;
     const string = this.penguinString;
     if (isGameRoom(room)) {
       this._roomInfo = undefined;
@@ -768,7 +779,7 @@ export class Client {
       this.setPosition(xx, yy);
 
       this.followers.forEach(bot => {
-        bot.joinRoom(room, x, y)
+        bot.joinRoom(room, xx, yy);
         bot.followPosition(xx, yy);
       });
     }

@@ -7,6 +7,9 @@ import { Update } from "./updates";
 /** Fan issue is the only exceptional newspaper */
 export const FAN_ISSUE_DATE = '2005-10-28';
 
+/** Beta placeholder newspaper */
+export const BETA_ISSUE_DATE = '2005-08-22';
+
 /** Array that lists all the newspapers that were never in the boiler room (index number + 1 matches the issue number) */
 export const PRE_BOILER_ROOM_PAPERS: Version[] = [
   '2005-10-24',

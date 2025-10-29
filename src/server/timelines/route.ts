@@ -390,6 +390,9 @@ function addCatalogues(map: FileTimelineMap): void {
   map.addDateRefMap('play/v2/content/local/en/catalogues/furniture.swf', FURNITURE_CATALOGS);
   map.addDateRefMap('play/v2/content/local/en/catalogues/igloo.swf', IGLOO_CATALOGS);
 
+  // lazy way of doing it
+  map.add('crossdomain.xml', 'tool:crossdomain.xml', '2005-08-22');
+
   // Engine 1 Catalogues - Client always requests furniture0603, igloo0604, or blank .swf
   // Map these to appropriate timeline versions
   map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0510.swf', '2005-10-24');
@@ -401,7 +404,7 @@ function addCatalogues(map: FileTimelineMap): void {
   map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0604.swf', '2006-04-07');
   map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0605.swf', '2006-05-05');
   map.add('artwork/catalogue/furniture0603.swf', 'mammoth:artwork/catalogue/Furniture_0606.swf', '2006-06-02');
-  
+
   // Igloo catalogue - Client requests igloo0604
   map.add('artwork/catalogue/igloo0604.swf', 'mammoth:artwork/catalogue/Igloo_Pre0604.swf', '2005-10-24');
   map.add('artwork/catalogue/igloo0604.swf', 'mammoth:artwork/catalogue/Igloo_0604.swf', '2006-04-07');

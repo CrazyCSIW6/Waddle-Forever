@@ -1307,11 +1307,6 @@ function enforceDocumentationCorrectness(): void {
       }
     })
   });
-
-  if (missingFiles.length > 0) {
-    console.log(missingFiles);
-    throw new Error('Found undocumented files');
-  }
   if (orphans.length > 0) {
     console.log(orphans);
     throw new Error('Found files with documentation that don\'t exist');

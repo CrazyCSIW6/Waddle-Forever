@@ -3,6 +3,7 @@ import path from "path";
 // file id of newspapers in order
 // TODO place in newspapers.ts
 const newspaperFiles = [
+  'archives:NewsBeta.swf',
   'archives:News1.swf',
   'archives:News2.swf',
   'archives:News3.swf',
@@ -33,9 +34,13 @@ const newspaperFiles = [
 const staticNewspaperFiles: Record<string, string> = {};
 
 newspaperFiles.forEach((fileId, index) => {
-  const route = path.join('artwork/news', `news${index + 1}.swf`);
+  const routeName = index === 0 ? 'newsbeta' : `news${index}`;
+  const route = path.join('artwork/news', `${routeName}.swf`);
   staticNewspaperFiles[route] = fileId;
-})
+});
+
+// Fan issue - request comes in as newsfan.swf
+staticNewspaperFiles[path.join('artwork/news', 'newsfan.swf')] = 'archives:NewsFan.swf';
 
 
 export const PRE_CPIP_STATIC_FILES: Record<string, string> = {

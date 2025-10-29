@@ -3,7 +3,7 @@ import path from 'path'
 import { BrowserWindow, ipcMain } from "electron";
 import { PARTIES } from '../server/game-data/parties';
 import { isEqual, isLower, processVersion, Version } from '../server/routes/versions';
-import { FAN_ISSUE_DATE, AS2_NEWSPAPERS, PRE_BOILER_ROOM_PAPERS, AS3_NEWSPAPERS } from '../server/game-data/newspapers';
+import { FAN_ISSUE_DATE, BETA_ISSUE_DATE, AS2_NEWSPAPERS, PRE_BOILER_ROOM_PAPERS, AS3_NEWSPAPERS } from '../server/game-data/newspapers';
 import { PRE_CPIP_CATALOGS, FURNITURE_CATALOGS, CPIP_CATALOGS } from '../server/game-data/catalogues';
 import { STAGE_TIMELINE } from '../server/game-data/stage-plays';
 import { IGLOO_LISTS } from '../server/game-data/igloo-lists';
@@ -270,6 +270,7 @@ function addGames(map: DayMap): void {
 function addNewspapers(map: DayMap): DayMap {
   // fan issue, a CPT issue which didn't have a proper number
   addEvents(map, FAN_ISSUE_DATE, { newIssue: 'Fan issue of the newspaper released '});
+  addEvents(map, BETA_ISSUE_DATE, { newIssue: 'Placeholder newspaper released'});
 
   PRE_BOILER_ROOM_PAPERS.forEach((date, index) => {
     const issue = index + 1;

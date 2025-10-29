@@ -119,6 +119,10 @@ export const STANDALONE_UPDATES: PermanentUpdateTimeline<PermanentUpdate> = [
       // no idea on this one's date, adding it here
       lounge: 6
     },
+    roomMemberStatus: {
+      dojofire: true,
+      dojowater: true,
+    },
     map: 'unknown:cpip_map_no_dojoext.swf'
   },
   {
@@ -181,6 +185,17 @@ export const STANDALONE_UPDATES: PermanentUpdateTimeline<PermanentUpdate> = [
         'en': 'slegacy:media/play/v2/content/local/en/forms/moderator.swf'
       }
     }
+  },
+  {
+    // implementing 2011 AS3 startscreens
+    date: Update.AS3_STARTSCREEN,
+    generalChanges: {
+      'play/v2/client/club_penguin.swf': 'archives:ClientClubPenguin2011-03-28.swf',
+      'play/v2/client/world.swf': 'archives:ClientWorld.swf',
+      'play/v2/client/login.swf': 'archives:ClientLogin2011-08-20.swf',
+      'play/start/swf/start.swf': 'archives:PlayStartSwfStart.swf'
+    },
+    startscreens: [ 'archives:LoginSystemDefender.swf' ]
   }
 ];
 
@@ -325,6 +340,15 @@ export const STANDALONE_TEMPORARY_UPDATES: ComplexTemporaryUpdateTimeline<Tempor
         comment: 'Rockhopper is seen closer from the telescope'
       }
     ]
+  },
+  {
+    date: '2011-03-01',
+    end: '2011-03-08',
+    comment: 'Renovation for the Pet Shop begins',
+    roomChanges: {
+      plaza: 'archives:PlazaConstructionMar2011.swf',
+      pet: 'archives:PetConstructionMar2011.swf'
+    }
   }
 ]
 
@@ -343,7 +367,7 @@ export const STANDALONE_CHANGE: Record<string, Array<{ fileRef: string; date: st
   ],
   'play/v2/client/shell.swf': [
     {
-      fileRef: 'slegacy:media/play/v2/client/shell.swf',
+      fileRef: 'approximation:shell.swf',
       date: Update.CPIP_UPDATE
     },
     {

@@ -1160,7 +1160,7 @@ const DIALOGUE = {
       'whats your favorite server?', 'any good clans?', 'how do you make money in game?',
       'seen any rare stuff?', 'whats the rarest item?', 'any secret areas?',
       'how do you unlock everything?', 'best grinding spots?', 'any exploits?',
-      'whats changed since beta?', 'how has it evolved?', 'any upcoming features?'
+      'any upcoming features?'
     ]
   },
   adult: {
@@ -2772,6 +2772,11 @@ function getBotChatMessage(bot: Client, context: 'general' | 'beta' | 'betaHat' 
   }
   
   if (context === 'betaHat') {
+    const version = room?.server?.settings.version ?? bot.server.settings.version;
+    if (!version || !isPostOfficialLaunch(version)) {
+      return null;
+    }
+
     const dialogueAge = getDialogueAge(age);
     const messages = DIALOGUE.betaHat[dialogueAge];
     return messages[randomInt(0, messages.length - 1)];

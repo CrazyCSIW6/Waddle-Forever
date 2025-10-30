@@ -42,7 +42,6 @@ class CommandsHandler {
         const callbacks = commands.get(keyword);
         if (callbacks !== undefined) {
           if (!isAuthorized(client.penguin.name)) {
-            client.sendError(610, 'You are not authorized to use commands.');
             return;
           }
           const args = commandMatch[2].split(/\s+/).slice(1);

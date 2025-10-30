@@ -4778,7 +4778,6 @@ handler.xt(Handle.SendMessageOld, (client, id, message) => {
 
 handler.xt(Handle.SendMessageOld, (client, ...args) => {
   if (!isAuthorized(client.penguin.name)) {
-    client.sendError(610, 'You are not authorized to use commands.');
     return;
   }
 

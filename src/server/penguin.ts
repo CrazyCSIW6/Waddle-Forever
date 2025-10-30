@@ -678,7 +678,7 @@ export class Penguin {
       feet: 0,
       pin: 0,
       background: 0,
-      coins: 100, // Vanilla CP is 500 coins, but we pay 2x more in minigames so its lower for balance reasons
+      coins: 0, // Vanilla CP is 500 coins, but for balance reasons I've changed it to 0
       minutes_played: 0,
       registration_date: Date.now(),
       inventory: startingInventory,

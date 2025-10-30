@@ -62,6 +62,7 @@ export enum Update {
   // it should be in 2007, I put the earliest date in which chat339.swf fails to provide features
   // the feature being the lighthouse
   PRE_CPIP_REWRITE_DATE = LIGHTHOUSE_PARTY_START,
+  DISNEY_ACQUIRED_DATE = '2007-08-01',
   FIRST_STAGE_PLAY = '2007-11-16',
   // Update is around Oct 23, but this so far is the first practical
   // use of AS3 in WF

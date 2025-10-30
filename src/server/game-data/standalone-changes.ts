@@ -365,6 +365,18 @@ export const STANDALONE_CHANGE: Record<string, Array<{ fileRef: string; date: st
       date: PRE_BOILER_ROOM_PAPERS[0]
     }
   ],
+  'interface41.swf': [
+	{
+	  // before disney acquisition
+	  fileRef: 'slippers07:media/interface41_no_disney.swf',
+	  date: Update.PRE_CPIP_REWRITE_DATE
+	},
+	{
+	  // AFTER disney acquisition
+	  fileRef: 'slippers07:media/interface41.swf',
+	  date: Update.DISNEY_ACQUIRED_DATE
+	}
+  ],
   'play/v2/client/shell.swf': [
     {
       fileRef: 'approximation:shell.swf',

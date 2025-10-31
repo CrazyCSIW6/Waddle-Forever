@@ -285,7 +285,7 @@ export const HANDLE_ARGUMENTS = {
   [Handle.JoinSled]: [],
   [Handle.SledRaceAction]: ['string', 'string', 'string', 'string'],
   [Handle.LeaveWaddleGame]: [],
-  [Handle.PuckMove]: ['number', 'number'],
+  [Handle.PuckMove]: 'string',
   [Handle.GetPuckPosition]: [],
   [Handle.HandleSendMessage]: ['string', 'string'],
   [Handle.SendJokeOld]: ['string'],

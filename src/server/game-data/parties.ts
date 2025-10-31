@@ -1881,7 +1881,7 @@ export const PARTIES: ComplexTemporaryUpdateTimeline<Party> = [
         'en': 'archives:BoxCatalog.swf'
       },
       'membership/party3.swf': {
-        'en': 'archives:AprilFoolMembership.swf'
+        'en': ['archives:AprilFoolMembership.swf', 'oops_party3_room']
       }
     },
     roomMemberStatus: {
@@ -3082,7 +3082,7 @@ export const PARTIES: ComplexTemporaryUpdateTimeline<Party> = [
         'en': 'recreation:mountain_expedition_poster.swf'
       },
       'membership/party3.swf': {
-        'en': 'archives:MountainExpeditionMembershipOopsExpedition.swf'
+        'en': ['archives:MountainExpeditionMembershipOopsExpedition.swf', 'oops_party3_room']
       }
     },
     roomMemberStatus: {
@@ -3253,7 +3253,7 @@ export const PARTIES: ComplexTemporaryUpdateTimeline<Party> = [
         'en': 'archives:HalloweenParty2010Poster.swf'
       },
       'membership/party3.swf': {
-        'en': 'archives:HalloweenParty2010MembershipParty3.swf'
+        'en': ['archives:HalloweenParty2010MembershipParty3.swf', 'oops_party3_room']
       }
     },
     roomMemberStatus: {
@@ -3660,10 +3660,10 @@ export const PARTIES: ComplexTemporaryUpdateTimeline<Party> = [
         'en': 'archives:PuffleParty2011Poster.swf'
       },
       'membership/party2.swf': {
-        'en': 'archives:PuffleParty2011MembershipParty2.swf'
+        'en': ['archives:PuffleParty2011MembershipParty2.swf', 'oops_party2_room']
       },
       'membership/party3.swf': {
-        'en': 'archives:PuffleParty2011MembershipParty3.swf'
+        'en': ['archives:PuffleParty2011MembershipParty3.swf', 'oops_party3_room']
       }
     },
     startscreens: [
@@ -3695,8 +3695,8 @@ export const PARTIES: ComplexTemporaryUpdateTimeline<Party> = [
   },
   {
     name: 'April Fools',
-    date: '2011-03-25',
-    end: '2011-04-05',
+    date: Update.APRIL_FOOLS_11_START,
+    end: Update.APRIL_FOOLS_11_END,
     globalChanges: {
       'scavenger_hunt/hunt_ui.swf': ['archives:AprilFoolsParty2011Scavenger_hunt.swf', 'april_fools_hunt', 'scavenger_hunt']
     },
@@ -3711,8 +3711,17 @@ export const PARTIES: ComplexTemporaryUpdateTimeline<Party> = [
       'catalogues/party.swf': {
         'en': 'archives:AprilFoolsParty2011PartyCatalog.swf'
       },
-      'membership/party2.swf': {
-        'en': 'archives:AprilFoolsParty2011MembershipParty2.swf'
+      'membership/party.swf': {
+        'en': [
+          'archives:AprilFoolsParty2011MembershipParty2.swf',
+          'oops_party1_room',
+          'oops_party2_room',
+          'oops_party3_room',
+          'oops_party4_room',
+          'oops_party5_room',
+          'oops_party6_room',
+          'oops_party7_room',
+        ]
       }
     },
     roomChanges: {
@@ -3784,14 +3793,18 @@ export const PARTIES: ComplexTemporaryUpdateTimeline<Party> = [
       'village': 232
     },
     roomMemberStatus: {
-      'party6': true
+      party1: true,
+      party2: true,
+      party3: true,
+      party4: true,
+      party5: true,
+      'party6': true,
+      party7: true
     },
     permanentChanges: {
       generalChanges: {
         // interface that has scavenger hunt functions
-        'play/v2/client/interface.swf': 'archives:ClientInterface20110830.swf',
-        // engine that has teleport functions
-        'play/v2/client/engine.swf': 'archives:ClientEngine2012-10-17.swf'
+        'play/v2/client/interface.swf': 'archives:ClientInterface20110830.swf'
       }
     },
     scavengerHunt2011: {
@@ -3822,5 +3835,437 @@ export const PARTIES: ComplexTemporaryUpdateTimeline<Party> = [
         }
       }
     }
+  },
+  {
+    name: 'Earth Day',
+    date: '2011-04-21',
+    end: '2011-04-26',
+    roomChanges: {
+      dock: 'archives:EarthDay2011Dock.swf',
+      forest: 'archives:EarthDay2011Forest.swf',
+      plaza: 'archives:EarthDay2011Plaza.swf',
+      forts: 'archives:EarthDay2011Forts.swf',
+      town: 'archives:RoomsTown-March2011.swf',
+      cave: 'archives:EasterEggHunt2011Cave.swf',
+      dojo: 'archives:EasterEggHunt2011Dojo.swf',
+      attic: 'archives:EasterEggHunt2011Attic.swf',
+      shack: 'archives:EasterEggHunt2011Shack.swf',
+      mtn: 'archives:EasterEggHunt2011Mtn.swf'
+    },
+    scavengerHunt2011: {
+      icon: 'archives:EasterEggHunt2011Scavenger_hunt_icon.swf',
+      global: {
+        reward: 9098,
+        member: false
+      },
+      lang: {
+        en: {
+          loading: 'Loading Scavenger Hunt',
+          title: 'SCAVENGER HUNT',
+          claim: 'Claim Prize',
+          continue: 'Continue',
+          clues: [
+            'The first egg is\\nhidden way up high.\\nStart your search\\nnear a small bonsai',
+            'This clue requires\\na very short note:\\nFind this egg near\\na floating boat.',
+            'The next clue\\nis a total breeze.\\nLook for this egg\\naround some trees.',
+            'Go to where\\nthe lighting is dim.\\nThink of where\\nyou most like to swim.',
+            'You grasped the clues,\\nyou followed the signs...\\n...now find the polar bear\\nwrapped in vines!',
+            'You\'re almost done\\nso stay the course.\\nFind the room\\nwith a rocking horse.',
+            'Wrap up warm,\\nor you\'ll feel a chill.\\nSpot this egg\\non top of a hill.',
+            'With this last clue,\\nyou\'re good to go.\\nStart a machine\\nand make it snow.'
+          ],
+          'itemsFound': '',
+          itemsFoundPlural: '',
+          start: ''
+        }
+      }
+    },
+    globalChanges: {
+      'content/scavenger_hunt.swf': [ 'archives:EasterEggHunt2011Scavenger_hunt.swf', 'scavenger_hunt' ]
+    },
+    localChanges: {
+      'close_ups/poster.swf': {
+        'en': ['archives:EarthDay2011Poster.swf', 'party_poster']
+      },
+      'catalogues/party.swf': {
+        'en': ['archives:EarthDay2011CatalogParty.swf', 'party_catalogue']
+      },
+      'catalogues/party2.swf': {
+        'en': [ 'archives:EarthDay2011CatalogParty2.swf', 'party_catalogue2']
+      },
+      'earth_day_video.swf': {
+        'en': [ 'archives:EarthDay2011Earth_day_video.swf', 'earth_day_video']
+      }
+    },
+    music: {
+      dock: 269,
+      forts: 295
+    },
+    prices: {
+      4345: 50,
+      4344: 50
+    },
+    startscreens: [ 'archives:LoginEarth_day1.swf' ]
+  },
+  {
+    name: 'Medieval Party',
+    date: Update.MEDIEVAL_11_START,
+    end: Update.MEDIEVAL_11_END,
+    construction: {
+      date: '2011-05-17',
+      changes: {
+        'town': 'archives:RoomsTown-MedievalParty2010Pre.swf',
+        'forts': 'archives:MedievalParty2011ConstForts.swf',
+        'village': 'archives:MedievalParty2011ConstVillage.swf',
+        'plaza': 'archives:MedievalParty2011ConstPlaza.swf',
+        'cave': 'archives:MedievalParty2011ConstCave.swf',
+        'beach': 'archives:MedievalParty2011ConstBeach.swf'
+      }
+    },
+    localChanges: {
+      'catalogues/party.swf': {
+        'en': 'archives:MedievalParty2011CatalogParty.swf'
+      },
+      'catalogues/party2.swf': {
+        'en': 'archives:MedievalParty2011CatalogParty2.swf'
+      },
+      'membership/party.swf': {
+        'en': ['archives:MedievalParty2011MembershipParty2.swf', 'oops_party14_room', 'oops_party19_room']
+      },
+      'close_ups/InstructionsScroll.swf': {
+        en: ['svanilla:media/play/v2/content/local/en/close_ups/InstructionsScroll.swf', 'instructions_quest']
+      }
+    },
+    roomMemberStatus: {
+      'party14': true,
+      'party19': true
+    },
+    startscreens: [
+      'archives:LoginMedievalparty.swf'
+    ],
+    roomChanges: {
+      'book': 'archives:MedievalParty2011Book.swf',
+      'beach': 'archives:Rooms0508Beach.swf',
+      'beacon': 'archives:MedievalParty2011Beacon.swf',
+      'boiler': 'archives:MedievalParty2011Boiler.swf',
+      'cave': 'archives:MedievalParty2011Cave.swf',
+      'cove': 'archives:MedievalParty2011Cove.swf',
+      'coffee': 'archives:MedievalParty2011Coffee.swf',
+      'lounge': 'archives:MedievalParty2011Lounge.swf',
+      'light': 'archives:MedievalParty2011Light.swf',
+      'shop': 'archives:MedievalParty2011Shop.swf',
+      'dock': 'archives:MedievalParty2011Dock.swf',
+      'forest': 'archives:MedievalParty2011Forest.swf',
+      'dance': 'archives:MedievalParty2011Dance.swf',
+      'mine': 'archives:MedievalParty2011Mine.swf',
+      'shack': 'archives:MedievalParty2011Shack.swf',
+      'attic': 'archives:MedievalParty2011Attic.swf',
+      'pizza': 'archives:MedievalParty2011Pizza.swf',
+      'plaza': 'archives:MedievalParty2011Plaza.swf',
+      'eco': 'archives:MedievalParty2011Eco.swf',
+      'mtn': 'archives:MedievalParty2011Mtn.swf',
+      'rink': 'archives:MedievalParty2011Rink.swf',
+      'town': 'archives:RoomsTown-MedievalParty2011.swf',
+      'forts': 'archives:MedievalParty2011Forts.swf',
+      'village': 'archives:MedievalParty2011Village.swf',
+      'lodge': 'archives:Rooms0508Lodge.swf',
+      'party1': 'archives:MedievalParty2011Party1.swf',
+      'party2': 'archives:MedievalParty2011Party2.swf',
+      'party3': 'archives:MedievalParty2011Party3.swf',
+      'party4': 'archives:MedievalParty2011Party4.swf',
+      'party5': 'archives:MedievalParty2011Party5.swf',
+      'party6': 'archives:MedievalParty2011Party6.swf',
+      'party7': 'archives:MedievalParty2011Party7.swf',
+      'party8': 'archives:MedievalParty2011Party8.swf',
+      'party9': 'archives:MedievalParty2011Party9.swf',
+      'party10': 'archives:MedievalParty2011Party10.swf',
+      'party11': 'archives:MedievalParty2011Party11.swf',
+      'party12': 'archives:MedievalParty2011Party12.swf',
+      'party13': 'archives:MedievalParty2011Party13.swf',
+      'party14': 'archives:MedievalParty2011Party14.swf',
+      'party15': 'archives:MedievalParty2011Party15.swf',
+      'party16': 'archives:MedievalParty2011Party16.swf',
+      'party17': 'archives:MedievalParty2011Party17.swf',
+      'party18': 'archives:MedievalParty2011Party18.swf',
+      'party19': 'archives:MedievalParty2011Party19.swf',
+      'party20': 'archives:MedievalParty2011Party20.swf',
+      'party21': 'archives:MedievalParty2011Party21.swf',
+      'party22': 'archives:MedievalParty2011Party22.swf',
+      'party23': 'archives:MedievalParty2011Party23.swf'
+    },
+    music: {
+      'town': 233,
+      'plaza': 233,
+      'village': 233,
+      'beach': 233,
+      'rink': 233,
+      'shack': 233,
+      'dock': 233,
+      'beacon': 233,
+      'mtn': 233,
+      'lounge': 31,
+      'coffee': 234,
+      'book': 234,
+      'dance': 234,
+      'light': 234,
+      'shop': 234,
+      'eco': 234,
+      'pizza': 234,
+      'forest': 235,
+      'forts': 235,
+      'lodge': 235,
+      'attic': 235,
+      'cove': 235,
+      'mine': 236,
+      'cave': 236,
+      'boiler': 236,
+      'party1': 235,
+      'party2': 236,
+      'party3': 236,
+      'party4': 236,
+      'party5': 236,
+      'party6': 236,
+      'party7': 236,
+      'party8': 236,
+      'party9': 236,
+      'party10': 236,
+      'party11': 236,
+      'party12': 236,
+      'party13': 265,
+      'party14': 286,
+      'party15': 286,
+      'party16': 287,
+      'party17': 288,
+      'party18': 265,
+      'party19': 310,
+      'party20': 310,
+      'party21': 309,
+      'party22': 308,
+      'party23': 41
+    }
+  },
+  {
+    name: 'Music Jam',
+    date: '2011-06-16',
+    end: '2011-07-05',
+    roomChanges: {
+      'town': 'archives:RoomsTown-MusicJam2011.swf',
+      'rink': 'archives:MusicJam2011Rink.swf',
+      'forts': 'archives:MusicJam2011Forts.swf',
+      'village': 'archives:MusicJam2011Village.swf',
+      'plaza': 'archives:MusicJam2011Plaza.swf',
+      'pizza': 'archives:MusicJam2011Pizza.swf',
+      'dance': 'archives:MusicJam2011Dance.swf',
+      'mine': 'archives:MusicJam2011Mine.swf',
+      'light': 'archives:MusicJam2011Light.swf',
+      'beach': 'archives:MusicJam2011Beach.swf',
+      'forest': 'archives:MusicJam2011Forest.swf',
+      'dock': 'archives:MusicJam2011Dock.swf',
+      'lounge': 'archives:MusicJam2011Lounge.swf',
+      'coffee': 'archives:MusicJam2011Coffee.swf',
+      'cave': 'archives:MusicJam2011Cave.swf',
+      'berg': 'archives:MusicJam2011Berg.swf',
+      'cove': 'archives:MusicJam2011Cove.swf',
+      'party': 'archives:MusicJam2011Party.swf',
+      'party2': 'archives:MusicJam2011Party2.swf',
+      'party3': 'archives:MusicJam2011Party3.swf',
+      'party4': 'archives:MusicJam2011Party4.swf'
+    },
+    music: {
+      'town': 271,
+      coffee: 0,
+      'plaza': 271,
+      'pizza': 271,
+      'forts': 271,
+      'party3': 271,
+      'dance': 242,
+      'rink': 240,
+      'mine': 247,
+      village: 292
+    },
+    startscreens: [
+      'archives:MusicJam2011BillboardMusic_jam2.swf'
+    ],
+    localChanges: {
+      'close_ups/poster.swf': {
+        'en': 'archives:MusicJam2011Poster.swf'
+      },
+      'catalogues/party.swf': {
+        'en': [ 'archives:MusicJam2011CatalogParty.swf', 'party_catalogue' ]
+      },
+      'catalogues/party2.swf': {
+        'en': [ 'archives:MusicJam2011CatalogParty2.swf', 'party2_catalogue' ]
+      },
+      'catalogues/party3.swf': {
+        'en': [ 'archives:MusicJam2011CatalogParty3.swf', 'party3_catalogue' ]
+      },
+      'membership/party2.swf': {
+        'en': [ 'archives:MusicJam2011MembershipParty2.swf', 'oops_party2_room', 'oops_party3_room', 'oops_party4_room' ]
+      }
+    },
+    roomMemberStatus: {
+      'party2': true,
+      'party3': true,
+      'party4': true
+    }
+  },
+  {
+    name: 'Island Adventure Party',
+    date: Update.ISLAND_ADVENTURE_11_START,
+    end: '2011-08-04',
+    construction: {
+      date: '2011-07-14',
+      changes: {
+        'town': 'archives:RoomsTown-IslandAdventureParty2010Pre.swf',
+        'beach': 'archives:IslandAdventureParty2011ConstBeach.swf',
+        'plaza': 'archives:IslandAdventureParty2011ConstPlaza.swf',
+        'cove': 'archives:IslandAdventureParty2011ConstCove.swf'
+      }
+    },
+    roomChanges: {
+      'town': 'archives:RoomsTown-IslandAdventureParty2011.swf',
+      'plaza': 'archives:IslandAdventureParty2011Plaza.swf',
+      'forts': 'archives:IslandAdventureParty2011Forts.swf',
+      'forest': 'archives:IslandAdventureParty2011Forest.swf',
+      'village': 'archives:IslandAdventureParty2011Village.swf',
+      'dock': 'archives:IslandAdventureParty2011Dock.swf',
+      'pizza': 'archives:IslandAdventureParty2011Pizza.swf',
+      'cove': 'archives:IslandAdventureParty2011Cove.swf',
+      'berg': 'archives:IslandAdventureParty2011Berg.swf',
+      'beach': 'archives:IslandAdventureParty2011Beach.swf',
+      'dance': 'archives:IslandAdventureParty2011Dance.swf',
+      'lake': 'archives:IslandAdventureParty2011Lake.swf',
+      'shiphold': 'archives:IslandAdventureParty2011Shiphold.swf',
+      'party': 'archives:IslandAdventureParty2011Party.swf',
+      'party2': 'archives:IslandAdventureParty2011Party2.swf'
+    },
+    music: {
+      'forest': 290,
+      'beach': 41,
+      'dock': 41,
+      'town': 268,
+      'dance': 269,
+      'party': 267,
+      'party2': 289,
+      'forts': 291,
+      'shiphold': 291,
+      'plaza': 291,
+      'pizza': 291,
+      'cove': 291,
+      'lake': 291,
+      'village': 291,
+      'berg': 291
+    },
+    activeMigrator: true,
+    localChanges: {
+      'close_ups/poster.swf': {
+        'en': [ 'archives:IslandAdventureParty2011Party_poster.swf', 'party_poster' ]
+      },
+      'close_ups/christmasposter.swf': {
+        'en': [ 'archives:IslandAdventureParty2011Party_poster2.swf', 'party_poster2' ]
+      },
+      'close_ups/poster3.swf': {
+        'en': [ 'archives:IslandAdventureParty2011Party_poster3.swf', 'party_poster3' ]
+      },
+      'membership/party1.swf': {
+        'en': [ 'archives:IslandAdventureParty2011MembershipParty1.swf', 'oops_party1_room' ]
+      },
+      'membership/party2.swf': {
+        'en': [ 'archives:IslandAdventureParty2011MembershipParty2.swf', 'oops_party2_room', 'oops_party3_room' ]
+      },
+      'catalogues/party.swf': {
+        'en': 'archives:IslandAdventureParty2011CatalogParty.swf'
+      },
+      'close_ups/party_note01.swf': {
+        'en': 'archives:IslandAdventureParty2011Party_note01.swf'
+      },
+      'close_ups/party_note02.swf': {
+        'en': 'archives:IslandAdventureParty2011Party_note02.swf'
+      },
+      'close_ups/party_note03.swf': {
+        'en': 'archives:IslandAdventureParty2011Party_note03.swf'
+      },
+      'close_ups/party_note04.swf': {
+        'en': 'archives:IslandAdventureParty2011Party_note04.swf'
+      },
+      'close_ups/party_note05.swf': {
+        'en': 'archives:IslandAdventureParty2011Party_note05.swf'
+      },
+      'close_ups/party_note06.swf': {
+        'en': ['archives:IslandAdventureParty2011Party_note06.swf', 'party_note06']
+      }
+    },
+    roomMemberStatus: {
+      'party2': true
+    },
+    startscreens: [
+      'archives:LoginIslandAdventureParty2011.swf'
+    ]
+  },
+  {
+    name: 'Battle of Doom',
+    date: '2011-05-31',
+    end: '2011-06-07',
+    roomChanges: {
+      village: 'archives:BattleofDoomVillage.swf',
+      agentlobbysolo: 'archives:BattleofDoomAgentlobbysolo.swf',
+      agentlobbymulti: 'archives:BattleofDoomAgentlobbymulti.swf',
+      party: 'archives:BattleofDoomParty.swf'
+    },
+    localChanges: {
+      'herbert_taunt.swf': {
+        en: [ 'archives:ENBattleofDoomHerbertTaunt.swf', 'herbert_taunt' ]
+      },
+      'herbert_taunt2.swf': {
+        en: [ 'archives:ENBattleofDoomHerbertTaunt2.swf', 'herbert_taunt_defeated' ]
+      },
+      'close_ups/party_op_medals_earned.swf': {
+        en: [ 'svanilla:media/play/v2/content/local/en/close_ups/party_op_medals_earned.swf', 'party_op_medals_earned' ]
+      }
+    },
+    music: {
+      party: 125
+    }
+  },
+  { name: 'Great Snow Race', 
+    date: '2011-08-25', 
+    end: '2011-08-31', 
+    construction: { 
+      date: '2011-08-18', 
+      changes: { 
+        village: 
+        'archives:TheGreatSnowRaceConstVillage.swf' 
+      } 
+    }, 
+    roomChanges: 
+    { 'town': 'archives:RoomsTown-GreatSnowRace.swf', 
+      'plaza': 'archives:TheGreatSnowRacePlaza.swf', 
+      'village': 'archives:TheGreatSnowRaceVillage.swf', 
+      'party1': 'archives:TheGreatSnowRaceParty1.swf', 
+      'party2': 'archives:TheGreatSnowRaceParty2.swf', 
+      'party3': 'archives:TheGreatSnowRaceParty3.swf', 
+      'party4': 'archives:TheGreatSnowRaceParty4.swf', 
+      'party5': 'archives:TheGreatSnowRaceParty5.swf', 
+      'party6': 'archives:TheGreatSnowRaceParty6.swf', 
+      'party7': 'archives:TheGreatSnowRaceParty7.swf', 
+      'party8': 'archives:TheGreatSnowRaceParty8.swf', 
+      'party9': 'archives:TheGreatSnowRaceParty9.swf', 
+      'party10': 'archives:TheGreatSnowRaceParty10.swf' 
+    }, 
+    music: { 
+      'party2': 294, 
+      'party3': 295, 
+      'party4': 295, 
+      'party5': 295, 
+      'party6': 256 
+    }, 
+    localChanges: { 
+      'close_ups/poster.swf': { 
+        'en': 'archives:TheGreatSnowRacePoster.swf' 
+      }, 
+      'catalogues/party.swf': { 
+        'en': 'archives:TheGreatSnowRaceCatalogParty.swf' 
+      } 
+    } 
   }
 ];

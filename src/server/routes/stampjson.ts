@@ -2129,5 +2129,44 @@ export function getStampbook(version: Version): string {
     ]);
   }
 
+  if (isGreaterOrEqual(version, Update.APRIL_FOOLS_11_START)) {
+    addStamps(newStampbook[CategoryID.Party] as Category, [
+      {
+        stamp_id: 332,
+        name: 'Food Fight',
+        is_member: false,
+        rank: 1,
+        description: 'Throw your meal in a place where food is found',
+        rank_token: 'easy'
+      }
+    ]);
+  }
+
+    if (isGreaterOrEqual(version, Update.MEDIEVAL_11_START)) {
+    addStamps(newStampbook[CategoryID.Party] as Category, [
+      {
+        stamp_id: 360,
+        name: 'Noble Knight',
+        is_member: true,
+        rank: 2,
+        description: 'Wear a knight costume at the Medieval party',
+        rank_token: 'medium'
+      }
+    ]);
+  }
+
+  if (isGreaterOrEqual(version, Update.ISLAND_ADVENTURE_11_START)) {
+    addStamps(newStampbook[CategoryID.Party] as Category, [
+      {
+        stamp_id: 426,
+        name: 'Music Maestro',
+        is_member: false,
+        rank: 2,
+        description: 'Solve a musical challenge at a party',
+        rank_token: 'medium'
+      }
+    ]);
+  }
+
   return JSON.stringify(newStampbook)
 }

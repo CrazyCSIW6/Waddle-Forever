@@ -208,10 +208,18 @@ export class HttpServer {
           }
   
           logdebug(`Requested: ${route}, sending: ${filePath}`);
-          res.sendFile(path.join(MEDIA_DIRECTORY, filePath));
+          const resolvedPath = path.join(MEDIA_DIRECTORY, filePath);
+          if (!fs.existsSync(resolvedPath) && resolvedPath.toLowerCase().endsWith('.swf')) {
+            console.warn(`[Media] Missing SWF asset requested: Route="${route}" ResolvedPath="${resolvedPath}"`);
+          }
+          res.sendFile(resolvedPath);
         }
       } else {
-        res.sendFile(path.join(MEDIA_DIRECTORY, special.files[specialCheck]));
+        const resolvedPath = path.join(MEDIA_DIRECTORY, special.files[specialCheck]);
+        if (!fs.existsSync(resolvedPath) && resolvedPath.toLowerCase().endsWith('.swf')) {
+          console.warn(`[Media] Missing SWF asset requested: Route="${route}" ResolvedPath="${resolvedPath}"`);
+        }
+        res.sendFile(resolvedPath);
       }
     });
   }
@@ -368,7 +376,11 @@ export class HttpServer {
       if (handled === undefined) {
         next();
       } else {
-        res.sendFile(path.join(MEDIA_DIRECTORY, handled))
+        const resolvedPath = path.join(MEDIA_DIRECTORY, handled);
+        if (!fs.existsSync(resolvedPath) && resolvedPath.toLowerCase().endsWith('.swf')) {
+          console.warn(`[Media] Missing SWF asset requested: Route="${route}" ResolvedPath="${resolvedPath}"`);
+        }
+        res.sendFile(resolvedPath)
       }
     })
   }
@@ -384,6 +396,9 @@ export class HttpServer {
         if (fs.existsSync(filePath)) {
           res.sendFile(filePath);
         } else {
+          if (filePath.toLowerCase().endsWith('.swf')) {
+            console.warn(`[Media] Missing SWF asset requested: Path="${filePath}"`);
+          }
           next();
         }
       }

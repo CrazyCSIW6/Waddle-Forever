@@ -26,16 +26,28 @@ handler.xt(Handle.GetPuckPosition, (client) => {
 });
 
 // Handle puck movement in ice rink (room 802)
-handler.xt(Handle.PuckMove, (client, x, y) => {
-  // Only handle if the client is in the ice rink
+handler.xt(Handle.PuckMove, (client, ...rawArgs: Array<number | string>) => {
   if (client.room?.id !== ICE_RINK_ROOM_ID) {
-    return false; // Not in ice rink, let other handlers try
+    return false;
   }
-  
+
+  // Engine 1 sends two numbers, Engine 2/3 send five values (including angles/velocity)
+  const [rawX, rawY] = rawArgs;
+  const x = typeof rawX === 'number' ? rawX : Number(rawX);
+  const y = typeof rawY === 'number' ? rawY : Number(rawY);
+
+  if (Number.isNaN(x) || Number.isNaN(y)) {
+    return false;
+  }
+
   puckState = { x, y };
 
-  // Broadcast puck movement to all players in the room
-  client.sendRoomXt('zm', x, y);
+  // Broadcast retaining original payload so modern clients stay in sync
+  if (rawArgs.length >= 5) {
+    client.sendRoomXt('zm', ...rawArgs);
+  } else {
+    client.sendRoomXt('zm', x, y);
+  }
   return true;
 });
 

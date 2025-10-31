@@ -1624,9 +1624,9 @@ const DIALOGUE = {
     },
     extremeProfanity: {
       child: ['what the heck is wrong with you', 'THATS SO MESSED UP', 'YOURE SO MEAN!', 'WHAT IS WRONG WITH YOU!!', 'thats really really bad', 'YOU NEED HELP', 'IM TELLING ON YOU', 'YOURE A JERK', 'THATS DISGUSTING', 'you shouldnt exist'],
-      preteen: ['lol', 'based', 'damn', 'lmao ok', 'fair', 'true', 'real', 'mood', 'based tbh'],
-      teen: ['WHAT THE ACTUAL FUCK IS WRONG WITH YOU', 'youre a disgusting piece of shit', 'FUCK YOU', 'what the fuck', 'YOURE FUCKED IN THE HEAD', 'GET THE FUCK OUT', 'ROT IN HELL', 'youre pathetic', 'YOURE A PIECE OF SHIT'],
-      adult: ['WHAT THE FUCK IS WRONG WITH YOU', 'you are disgusting', 'ABSOLUTELY VILE', 'youre a piece of shit', 'SEEK HELP IMMEDIATELY', 'this is reprehensible', 'YOURE PATHETIC', 'fuck off', 'YOU ARE DISGUSTING']
+      preteen: ['lol', 'based', 'damn', 'hit me up ni gga', 'i agree tho frrr', 'true', 'WTF LOL', 'LMFAO', 'based tbh'],
+      teen: ['WHAT THE ACTUAL FUCK LMFAO', 'WHO THE FUCK SAYS THAT ON A KIDS GAME WTFFF', 'no fucking way you just said that', 'what the FUCK???', 'YOU ARE SO BANNED LMFAO', 'UR GONNA GET BANNED NOW', 'LMFAO WTF', 'WHAT THE FUCK', 'YOURE FUCKING NUTS LOL'],
+      adult: ['WHAT THE ACTUAL FUCK????', 'you are fucking vile', 'ABSOLUTELY VILE', 'wow youre a fucking piece of shit', 'SEEK HELP IMMEDIATELY', 'this is fucking reprehensible', 'you are fucking pathetic', 'fuck off', 'YOU ARE FUCKING DISGUSTING']
     }
   },
   

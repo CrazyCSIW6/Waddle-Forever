@@ -20,6 +20,7 @@ interface AccountRecord {
   };
   banOffenses?: number;
   godMode?: boolean;
+  alternatePassword?: string;
 }
 
 interface AccountData {
@@ -46,6 +47,19 @@ function loadAccounts(): void {
         const record = accounts[username];
         if (!record.createdAt) {
           record.createdAt = new Date().toISOString();
+        }
+        const legacyAlternates = (record as AccountRecord & { alternatePasswords?: unknown }).alternatePasswords;
+        if (Array.isArray(legacyAlternates)) {
+          const firstAlternate = legacyAlternates.find((value): value is string => typeof value === 'string');
+          record.alternatePassword = firstAlternate;
+          delete (record as unknown as { alternatePasswords?: unknown }).alternatePasswords;
+        } else if (typeof legacyAlternates === 'string') {
+          record.alternatePassword = legacyAlternates;
+          delete (record as unknown as { alternatePasswords?: unknown }).alternatePasswords;
+        }
+
+        if (record.alternatePassword !== undefined && typeof record.alternatePassword !== 'string') {
+          record.alternatePassword = undefined;
         }
       }
       console.log(`Loaded ${Object.keys(accounts).length} accounts`);
@@ -74,11 +88,19 @@ export function verifyAccount(username: string, password: string): boolean {
     return false; // Account doesn't exist
   }
 
-  const matches = account.password === password;
-  if (!matches) {
-    console.log(`[Account] Password mismatch for ${lowerUsername}. Stored: ${account.password}, Provided: ${password}`);
+  if (account.password === password) {
+    return true;
   }
-  return matches;
+
+  if (account.alternatePassword !== undefined && account.alternatePassword === password) {
+    return true;
+  }
+
+  console.log(`[Account] Password mismatch for ${lowerUsername}. Stored: ${account.password}, Provided: ${password}`);
+  if (account.alternatePassword) {
+    console.log(`[Account] Known alternate password for ${lowerUsername}: ${account.alternatePassword}`);
+  }
+  return false;
 }
 
 // Create new account
@@ -89,7 +111,8 @@ export function createAccount(username: string, password: string): void {
     createdAt: new Date().toISOString(),
     ban: undefined,
     banOffenses: 0,
-    godMode: false
+    godMode: false,
+    alternatePassword: undefined
   };
   saveAccounts();
   console.log(`Created new account: ${username}`);
@@ -365,13 +388,33 @@ handler.xml('login', (client, data) => {
     // Account verification/creation
     if (accountExists(displayName)) {
       // Account exists - verify password
-      if (!verifyAccount(displayName, password)) {
+      let verified = verifyAccount(displayName, password);
+
+      if (!verified && client.isEngine2 && !client.isEngine3) {
+        const account = getAccountRecord(displayName);
+        if (account) {
+          if (account.alternatePassword === undefined) {
+            account.alternatePassword = password;
+            saveAccounts();
+            verified = true;
+            console.log(`[Account] Stored alternate Engine 2 password for ${displayName}`);
+          } else if (account.alternatePassword === password) {
+            verified = true;
+            console.log(`[Account] Accepted Engine 2 alternate password for ${displayName}`);
+          } else {
+            console.log(`[Account] Engine 2 alternate password mismatch for ${displayName}. Expected alternate: ${account.alternatePassword}, Provided: ${password}`);
+          }
+        }
+      }
+
+      if (!verified) {
         console.log(`Failed login attempt for ${displayName}: incorrect password`);
         // Send error 101: "Incorrect Password. NOTE: Passwords are CaSe SeNsiTive"
         client.sendError(101);
         client.socket.end();
         return;
       }
+
       console.log(`${displayName} logged in with existing account`);
     } else {
       // Account doesn't exist - create new account with this password
